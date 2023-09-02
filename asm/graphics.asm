@@ -60,6 +60,12 @@ GInitializeDisplay:
 	CALL_AND_ALLOCATE_STACK GMapWindow
 	ret
 
+; ---------------------- METHODS -------------------
+;---------------------------------------------------
+; Open Display
+; ------------
+; Stores the current display in [display]
+;---------------------------------------------------
 GOpenDisplay:
 	; Display* XOpenDisplay(NULL)
 	mov rdi, 0 ; Display name (0 indicates default display)
@@ -67,6 +73,11 @@ GOpenDisplay:
     mov [display], rax
 	ret
 
+;---------------------------------------------------
+; Default Screen
+; --------------
+; Stores the default screen in [screen]
+;---------------------------------------------------
 GDefaultScreen:
 	; int XDefaultScreen(display)
 	mov	rdi, [display]
@@ -74,6 +85,12 @@ GDefaultScreen:
 	mov	[screen], eax
 	ret
 
+;---------------------------------------------------
+; Pixels
+; ------
+; Gets and stores the black and white colors in
+; [black] and [white] respectively
+;---------------------------------------------------
 GPixels:
 	; int XBlackPixel(display, screen)
 	mov	rdi, [display]
@@ -88,6 +105,12 @@ GPixels:
 	mov	[white], eax
 	ret
 
+;---------------------------------------------------
+; Root Window
+; -----------
+; Gets the root window of the previously opened
+; display and stores in [r_win]
+;---------------------------------------------------
 GRootWindow:
 	; Window XDefaultRootWindow(display)
 	mov	rdi, [display]
@@ -99,6 +122,7 @@ GRootWindow:
 ; Create Window
 ; --------------------------------------------------
 ; Receives- Window Width, Window Height(STACK)
+; Returns-	the created window([win])
 ;---------------------------------------------------
 GCreateWindow:
 	; Window XCreateSimpleWindow(display, r_win, 0, 0, width, height, 0, black, black)
@@ -122,6 +146,14 @@ GCreateWindow:
     mov	[win], rax
 	ret
 
+;---------------------------------------------------
+; Set Title
+; ---------
+; Sets the title of the current window
+; --------------------------------------------------
+; Receives- Address of the null terminated
+; title(STACK)
+;---------------------------------------------------
 GSetTitle:
 	mov rdi, [display]
 	mov rsi, [win]
@@ -129,6 +161,14 @@ GSetTitle:
 	CALL_AND_ALLOCATE_STACK XStoreName
 	ret
 
+;---------------------------------------------------
+; Create Graphics Context
+; -----------------------
+; Creates the graphics context for the colors black
+; and white.
+; --------------------------------------------------
+; Returns-	the created context([gc_black], [gc_white])
+;---------------------------------------------------
 GCreateGraphicsContext:
 	; GC XCreateGC(display, win, GCForeground, &values_white)
 	mov	ecx, [white]
@@ -152,6 +192,15 @@ GCreateGraphicsContext:
 
 	ret
 
+
+;---------------------------------------------------
+; Default Color Map
+; -----------------
+; Initializes the default color map for our app
+; Used for color allocations
+; --------------------------------------------------
+; Returns-	the color map([colormap])
+;---------------------------------------------------
 GDefaultColorMap:
 	; Colormap XDefaultColormap(display, screen)
 	mov	rdi, [display]
@@ -160,6 +209,12 @@ GDefaultColorMap:
 	mov	[colormap], rax
 	ret
 
+;---------------------------------------------------
+; Select Input
+; ------------
+; Request the X server to report events associated
+; with keypress and exposure
+;---------------------------------------------------
 GSelectInput:
 	; void XSelectInput(display, win, ExposureMask | KeyPressMask)
 	mov	rdi, [display]
@@ -169,6 +224,12 @@ GSelectInput:
 	CALL_AND_ALLOCATE_STACK XSelectInput
 	ret
 
+
+;---------------------------------------------------
+; Map Window
+; ----------
+; Makes the game window eligible for display
+;---------------------------------------------------
 GMapWindow:
 	; void XMapWindow(display, win)
 	mov	rdi, [display]
@@ -176,6 +237,11 @@ GMapWindow:
 	CALL_AND_ALLOCATE_STACK XMapWindow
 	ret
 
+;---------------------------------------------------
+; Draw Rectangle
+; --------------
+; Draws a rectangle
+;---------------------------------------------------
 GDrawRectangle:
 	; TODO: add parameters
 
@@ -203,6 +269,15 @@ GDrawRectangle:
 
 	ret
 
+
+;---------------------------------------------------
+; Check Window Event
+; ------------------
+; Checks if exposure or keypress events were
+; triggered
+; --------------------------------------------------
+; Returns-	the current event([STACK_xevent])
+;---------------------------------------------------
 GCheckWindowEvent:
 	mov	rdi, [display]
 	mov	rsi, [win]
@@ -213,6 +288,15 @@ GCheckWindowEvent:
 	CALL_AND_ALLOCATE_STACK XCheckWindowEvent
 	ret
 
+;---------------------------------------------------
+; Check Key Press
+; ---------------
+; Checks if a key press event was triggered.
+; If it was, returns the XK code.
+; --------------------------------------------------
+; Returns- 	XK code if a key was pressed,
+;			otherwise 0 (RAX)
+;---------------------------------------------------
 GCheckKeyPress:
 	PUSH_ADDRESS xevent_inner
 	call GCheckWindowEvent
@@ -231,6 +315,14 @@ GCheckKeyPress:
 .finished_key_press:
 	ret
 
+;---------------------------------------------------
+; KeyCode to KeySym
+; -----------------
+; Converts between key codes.
+; --------------------------------------------------
+; Receives-	Keycode	(XEVENT_INNER)
+; Returns- 	XK code	(RAX)
+;---------------------------------------------------
 GKeycodeToKeysym:
 	mov rdi, [display]
 	mov esi, [xevent_inner + 84]	; offsetof(Xevent.xkey, keycode) == 84
@@ -240,6 +332,11 @@ GKeycodeToKeysym:
 	; res in rax
 	ret
 
+;---------------------------------------------------
+; Close Display
+; -------------
+; Closes the application
+;---------------------------------------------------
 GCloseDisplay:
 	; XCloseDisplay(display)
 	mov rdi, [display]
