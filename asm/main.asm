@@ -10,6 +10,7 @@ section .bss
 
 section .data
 
+window_title db "Pong",0
 
 section .text
 global main
@@ -19,6 +20,10 @@ main:
 	push DISPLAY_HEIGHT
 	call GInitializeDisplay
 	CLEAR_STACK_PARAMS 2
+
+	PUSH_ADDRESS window_title
+	call GSetTitle
+	CLEAR_STACK_PARAMS 1
 
 	;Infinite Game loop
 game_loop:

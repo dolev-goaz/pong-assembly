@@ -32,7 +32,7 @@ extern XOpenDisplay, XDefaultScreen, XDefaultRootWindow
 extern XCreateSimpleWindow, XBlackPixel, XWhitePixel
 extern XMapWindow, XSelectInput, XCreateGC, XDefaultColormap
 extern XDrawRectangle, XFillRectangle, XCheckWindowEvent, XCloseDisplay
-extern XkbKeycodeToKeysym
+extern XkbKeycodeToKeysym, XStoreName
 
 ; ---------------------- METHODS -------------------
 ;---------------------------------------------------
@@ -120,6 +120,13 @@ GCreateWindow:
 	CLEAR_STACK_PARAMS 1
 
     mov	[win], rax
+	ret
+
+GSetTitle:
+	mov rdi, [display]
+	mov rsi, [win]
+	GET_STACK_PARAM rdx, 1
+	CALL_AND_ALLOCATE_STACK XStoreName
 	ret
 
 GCreateGraphicsContext:
