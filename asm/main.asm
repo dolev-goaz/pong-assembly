@@ -1,6 +1,6 @@
 %include "asm/utils.asm"
-%include "asm/string_utils.asm"
 %include "asm/graphics.asm"
+%include "asm/XK_keycodes.asm"
 ; --- constants
 DISPLAY_WIDTH	equ 500
 DISPLAY_HEIGHT	equ 500
@@ -24,10 +24,12 @@ main:
 game_loop:
 
 	call GCheckKeyPress
-	test rax, rax
+	test rax, rax ; check if rax is not zero- a key was pressed
 	jz after_events
 
-	jmp exit_program
+key_pressed:
+	cmp rax, XK_Escape
+	je exit_program
 
 
 	; ---- end event handling

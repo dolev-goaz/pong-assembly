@@ -32,6 +32,7 @@ extern XOpenDisplay, XDefaultScreen, XDefaultRootWindow
 extern XCreateSimpleWindow, XBlackPixel, XWhitePixel
 extern XMapWindow, XSelectInput, XCreateGC, XDefaultColormap
 extern XDrawRectangle, XFillRectangle, XCheckWindowEvent, XCloseDisplay
+extern XkbKeycodeToKeysym
 
 ; ---------------------- METHODS -------------------
 ;---------------------------------------------------
@@ -217,9 +218,19 @@ GCheckKeyPress:
 	jne .finished_key_press
 
 	; key was pressed
-	mov rax, 1
+	CALL_AND_ALLOCATE_STACK GKeycodeToKeysym
+	; res in rax
 
 .finished_key_press:
+	ret
+
+GKeycodeToKeysym:
+	mov rdi, [display]
+	mov esi, [xevent_inner + 84]	; offsetof(Xevent.xkey, keycode) == 84
+	mov rdx, 0						; group
+	mov rcx, 0						; level
+	CALL_AND_ALLOCATE_STACK XkbKeycodeToKeysym
+	; res in rax
 	ret
 
 GCloseDisplay:
