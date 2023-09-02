@@ -15,6 +15,16 @@ section .text
     push rax
 %endmacro
 
+%macro CALL_AND_ALLOCATE_STACK 1
+	CALL_AND_ALLOCATE_STACK_COUNT %1, 1
+%endmacro
+
+%macro CALL_AND_ALLOCATE_STACK_COUNT 2
+	sub rsp, 8 * %2
+	call %1
+	add rsp, 8 * %2
+%endmacro
+
 ; ------------------------------------------------ METHODS --------------------------------------------
 ;-----------------------------------------
 ; EXIT
