@@ -16,13 +16,13 @@ section .text
 %endmacro
 
 %macro CALL_AND_ALLOCATE_STACK 1
-	CALL_AND_ALLOCATE_STACK_COUNT %1, 1
+    CALL_AND_ALLOCATE_STACK_COUNT %1, 1
 %endmacro
 
 %macro CALL_AND_ALLOCATE_STACK_COUNT 2
-	sub rsp, 8 * %2
+	sub rsp, WORD_SIZE * %2
 	call %1
-	add rsp, 8 * %2
+	add rsp, WORD_SIZE * %2
 %endmacro
 
 ; ------------------------------------------------ METHODS --------------------------------------------

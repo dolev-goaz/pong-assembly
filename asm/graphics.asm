@@ -1,7 +1,6 @@
 %ifndef GRAPHICS_INCLUDED
 %define GRAPHICS_INCLUDED
 %include "asm/utils.asm"
-%include "asm/string_utils.asm"
 section .data
 ExposureMask:	dq 32768
 KeyPressMask:	dq 1
@@ -31,12 +30,25 @@ extern XMapWindow, XSelectInput, XCreateGC, XDefaultColormap
 extern XDrawRectangle, XFillRectangle, XCloseDisplay
 
 ; ---------------------- METHODS -------------------
+;---------------------------------------------------
+; Initialize Display
+; --------------------------------------------------
+; Receives- Display Width, Display Height(STACK)
+;---------------------------------------------------
 GInitializeDisplay:
+
 	CALL_AND_ALLOCATE_STACK GOpenDisplay
 	CALL_AND_ALLOCATE_STACK GDefaultScreen
 	CALL_AND_ALLOCATE_STACK GPixels
 	CALL_AND_ALLOCATE_STACK GRootWindow
-	CALL_AND_ALLOCATE_STACK GCreateWindow
+
+	GET_STACK_PARAM rax, 1
+	GET_STACK_PARAM rbx, 2
+	push rbx
+	push rax
+	call GCreateWindow
+	CLEAR_STACK_PARAMS 2
+
 	CALL_AND_ALLOCATE_STACK GCreateGraphicsContext
 	CALL_AND_ALLOCATE_STACK GDefaultColorMap
 	CALL_AND_ALLOCATE_STACK GSelectInput
@@ -78,26 +90,31 @@ GRootWindow:
 	mov	[r_win], rax
 	ret
 
+;---------------------------------------------------
+; Create Window
+; --------------------------------------------------
+; Receives- Window Width, Window Height(STACK)
+;---------------------------------------------------
 GCreateWindow:
-	; TODO: parameters
-	; Window XCreateSimpleWindow(display, r_win, 0, 0, width: 500, height: 500, 0, black, black)
-    mov	rdi, [display]
-    mov	rsi, [r_win]
-    mov	rdx, 0
-    mov	rcx, 0
-    mov	r8d, 500
-    mov	r9d, 500
-    mov	rax, 0
-    push rax
+	; Window XCreateSimpleWindow(display, r_win, 0, 0, width, height, 0, black, black)
+	mov rdi, [display]		; display
+	mov rsi, [r_win]		; window
+	mov rdx, 0				; window position x (doesn't work?)
+	mov rcx, 0				; window position y (doesn't work?)
+	GET_STACK_PARAM r8, 2 	; window width
+	GET_STACK_PARAM r9, 1 	; window height
 
-    push rax
-    push r9
-    push r8
-    push rax
-    push rax
-    CALL_AND_ALLOCATE_STACK XCreateSimpleWindow
+	mov r10, 2				; border width (doesn't work?)
+	mov r11, 0xFFFFFF		; border color (doesn't work?)
+	mov r12, 0xFFFFFF		; background color (doesn't work?)
+
+
+	push 0x393968			; background-color
+	mov rax, 0				; clear return value
+	CALL_AND_ALLOCATE_STACK_COUNT XCreateSimpleWindow, 2
+	CLEAR_STACK_PARAMS 1
+
     mov	[win], rax
-    add rsp, 6 * 8 ; Clear the stack after the function call
 	ret
 
 GCreateGraphicsContext:
@@ -145,7 +162,7 @@ GMapWindow:
 	mov	rdi, [display]
 	mov	rsi, [win]
 	CALL_AND_ALLOCATE_STACK XMapWindow
-	retgc_black
+	ret
 
 GDrawRectangle:
 	; TODO: add parameters

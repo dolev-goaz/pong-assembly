@@ -1,5 +1,5 @@
 CC = nasm
-CFLAGS = -f elf64
+CFLAGS = -f elf64 -g
 
 SRC_DIR = asm
 OBJ_DIR = obj
