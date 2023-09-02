@@ -4,10 +4,13 @@
 section .data
 ExposureMask:	dq 32768
 KeyPressMask:	dq 1
-
 gc_foreground:	dq 4
 
+EventKeyPress:	dd 2
+
 section .bss
+xevent_inner:	resb 192
+
 display:		resb 8
 screen: 		resb 4
 r_win: 			resb 8
@@ -22,12 +25,13 @@ white: 			resb 4
 xgcvals_white: 	resb 128
 xgcvals_black:	resb 128
 
+
 section .text
 
 extern XOpenDisplay, XDefaultScreen, XDefaultRootWindow
 extern XCreateSimpleWindow, XBlackPixel, XWhitePixel
 extern XMapWindow, XSelectInput, XCreateGC, XDefaultColormap
-extern XDrawRectangle, XFillRectangle, XCloseDisplay
+extern XDrawRectangle, XFillRectangle, XCheckWindowEvent, XCloseDisplay
 
 ; ---------------------- METHODS -------------------
 ;---------------------------------------------------
@@ -189,6 +193,33 @@ GDrawRectangle:
 	call XFillRectangle
 	add rsp, 1 * 8 ; Clear the stack after the function call
 
+	ret
+
+GCheckWindowEvent:
+	mov	rdi, [display]
+	mov	rsi, [win]
+	mov	rdx, [ExposureMask]
+	or	rdx, [KeyPressMask]
+
+	GET_STACK_PARAM rcx, 1 ; rcx = xevent
+	CALL_AND_ALLOCATE_STACK XCheckWindowEvent
+	ret
+
+GCheckKeyPress:
+	PUSH_ADDRESS xevent_inner
+	call GCheckWindowEvent
+	CLEAR_STACK_PARAMS 1
+
+	mov rax, 0
+
+	mov	ecx, [xevent_inner + 0] 	; offsetof(xevent_inner, type) == 0
+	cmp ecx, [EventKeyPress]
+	jne .finished_key_press
+
+	; key was pressed
+	mov rax, 1
+
+.finished_key_press:
 	ret
 
 GCloseDisplay:
