@@ -3,7 +3,7 @@
 %include "asm/XK_keycodes.asm"
 ; --- constants
 DISPLAY_WIDTH	equ 500
-DISPLAY_HEIGHT	equ 500
+DISPLAY_HEIGHT	equ 600
 
 ; --- statically allocated empty data
 section .bss

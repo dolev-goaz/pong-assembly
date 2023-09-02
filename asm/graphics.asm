@@ -16,7 +16,7 @@ screen: 		resb 4
 r_win: 			resb 8
 win: 			resb 8
 gc_black:		resb 8
-gc_color:		resb 8
+gc_white:		resb 8
 colormap: 		resb 8
 
 black: 			resb 4
@@ -178,7 +178,7 @@ GCreateGraphicsContext:
 	mov	rdx, [gc_foreground]
 	mov	rcx, xgcvals_white
 	CALL_AND_ALLOCATE_STACK XCreateGC
-	mov	[gc_color], rax
+	mov	[gc_white], rax
 
 	; GC XCreateGC(display, win, GCForeground, &values_black)
 	mov	ecx, [black]
@@ -245,27 +245,27 @@ GMapWindow:
 GDrawRectangle:
 	; TODO: add parameters
 
-	; void XDrawRectangle(display, window, gc, x_pxl, y_pxl, tile_len, tile_len)
+	; void XDrawRectangle(display, window, gc, x_pxl, y_pxl, width, height)
     mov rdi, [display]
     mov rsi, [win]
-    mov rdx, [gc_color]
-    mov rcx, 150
-    mov r8, 150
-    mov r9, 200
-    push r9
+    mov rdx, [gc_white]
+    mov rcx, 150	; x
+    mov r8, 150		; y
+    mov r9, 200		; width
+	push 300		; height
     call XDrawRectangle
-	add rsp, 1 * 8 ; Clear the stack after the function call
+	CLEAR_STACK_PARAMS 1
 
-	; void XFillRectangle(display, window, gc, x_pxl, y_pxl, tile_len, tile_len)
+	; void XFillRectangle(display, window, gc, x_pxl, y_pxl, width, height)
 	mov	rdi, [display]
 	mov	rsi, [win]
-	mov	rdx, [gc_color]
-	mov	rcx, 150
-	mov	r8, 150
-	mov	r9, 200
-	push r9
+	mov	rdx, [gc_black]
+	mov	rcx, 150 + 1	; x (+1 to not overlap border)
+	mov	r8, 150 + 1		; y (+1 to not overlap border)
+	mov	r9, 200 - 2		; width (+2 to not overlap border)
+	push 300 - 2		; height (+2 to not overlap border)
 	call XFillRectangle
-	add rsp, 1 * 8 ; Clear the stack after the function call
+	CLEAR_STACK_PARAMS 1
 
 	ret
 
