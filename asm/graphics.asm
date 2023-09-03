@@ -274,9 +274,7 @@ GDrawRectangle:
 	GET_STACK_PARAM rcx, 4  ; x
 	GET_STACK_PARAM r8, 3   ; y
 	GET_STACK_PARAM r9, 2   ; width
-    sub r9, 1               ; width is one more for some reason?
 	GET_STACK_PARAM rbx, 1  ; height
-    sub rbx, 1              ; height is one more for some reason?
 	push rbx
 	call XFillRectangle
 	CLEAR_STACK_PARAMS 1

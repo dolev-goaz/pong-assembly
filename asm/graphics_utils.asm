@@ -27,6 +27,6 @@ section .text
     ; this rectangle is smaller to not override the border
     mov rbx, %2
     inc rbx
-    DrawRectangleFill %1+1, rbx, %3-1, %4-1
+    DrawRectangleFill %1+1, rbx, %3-2, %4-2
 %endmacro
 %endif
