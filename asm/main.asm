@@ -21,11 +21,14 @@ PlayerY dq 50
 window_title db "Pong", 0
 
 section .text
+%macro ClearScreen 0
+	DrawRectangleFill 0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT
+%endmacro
 global main
 
 main:
-	push DISPLAY_WIDTH + 1
-	push DISPLAY_HEIGHT + 1
+	push DISPLAY_WIDTH
+	push DISPLAY_HEIGHT
 	call GInitializeDisplay
 	CLEAR_STACK_PARAMS 2
 
@@ -51,14 +54,23 @@ after_esc:
 	jne after_up
 	; key is up
 	sub qword [PlayerY], PLAYER_STEP_SIZE
+	call ClampPlayer
+	ClearScreen
 
 after_up:
 	cmp rax, XK_Down
 	jne after_down
 	; key is down
 	add qword [PlayerY], PLAYER_STEP_SIZE
+	call ClampPlayer
+	ClearScreen
 
 after_down:
+
+	cmp rax, XK_space
+	jne after_space
+	ClearScreen
+after_space:
 
 	; ---- end event handling
 after_events:
@@ -71,3 +83,21 @@ exit_program:
     call exit
 
 ; ------------------------- methods
+
+ClampPlayer:
+	cmp qword [PlayerY], 0
+	jl .too_high
+
+	mov rbx, [PlayerY]
+	add rbx, PLAYER_HEIGHT
+	cmp rbx, DISPLAY_HEIGHT
+	jg .too_low
+	jmp .exit_clamp
+.too_low:
+	mov qword [PlayerY], DISPLAY_HEIGHT - PLAYER_HEIGHT
+	jmp .exit_clamp
+.too_high:
+	mov qword [PlayerY], 0
+	jmp .exit_clamp
+.exit_clamp:
+	ret

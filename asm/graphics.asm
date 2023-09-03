@@ -138,7 +138,7 @@ GCreateWindow:
 	mov r12, 0xFFFFFF		; background color (doesn't work?)
 
 
-	push 0x393968			; background-color
+	push 0x000000			; background-color
 	mov rax, 0				; clear return value
 	CALL_AND_ALLOCATE_STACK_COUNT XCreateSimpleWindow, 2
 	CLEAR_STACK_PARAMS 1
