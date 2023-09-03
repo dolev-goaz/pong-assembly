@@ -62,7 +62,7 @@ after_down:
 
 	; ---- end event handling
 after_events:
-	DrawRectangle PLAYER_X, [PlayerY], PLAYER_WIDTH, PLAYER_HEIGHT
+	DrawPlayer PLAYER_X, [PlayerY], PLAYER_WIDTH, PLAYER_HEIGHT
     jmp game_loop
 
 exit_program:

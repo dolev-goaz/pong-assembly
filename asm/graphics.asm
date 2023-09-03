@@ -238,14 +238,12 @@ GMapWindow:
 	ret
 
 ;---------------------------------------------------
-; Draw Rectangle
-; --------------
-; Draws a rectangle
+; Draw Rectangle Border
+; ---------------------
+; Draws a rectangle's outline
 ; Receives-	x, y, width, height	(STACK)
 ;---------------------------------------------------
-GDrawRectangle:
-	; TODO: add parameters
-
+GDrawRectangleBorder:
 	; void XDrawRectangle(display, window, gc, x, y, width, height)
     mov rdi, [display]
     mov rsi, [win]
@@ -257,20 +255,24 @@ GDrawRectangle:
     push rbx                ; height is in the stack for some reason
     call XDrawRectangle
 	CLEAR_STACK_PARAMS 1
+    ret
 
+;---------------------------------------------------
+; Draw Rectangle
+; --------------
+; Draws a rectangle
+; Receives-	x, y, width, height	(STACK)
+;---------------------------------------------------
+GDrawRectangle:
 	; void XFillRectangle(display, window, gc, x, y, width, height)
 	mov	rdi, [display]
 	mov	rsi, [win]
 	mov	rdx, [gc_black]
 
 	GET_STACK_PARAM rcx, 4  ; x
-	add rcx, 1              ; offset it to not override border
 	GET_STACK_PARAM r8, 3   ; y
-	add r8, 1               ; offset it to not override border
 	GET_STACK_PARAM r9, 2   ; width
-	sub r9, 1               ; dont overlap border
 	GET_STACK_PARAM rbx, 1  ; height
-	sub rbx, 1              ; dont overlap border
 	push rbx
 	call XFillRectangle
 	CLEAR_STACK_PARAMS 1
