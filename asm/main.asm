@@ -39,6 +39,29 @@ section .text
 %macro ClearScreen 0
 	DrawRectangleFill 0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT
 %endmacro
+
+%macro HandlePlayerInput 1
+	; ok, so basically, %% is dark magic for nasm
+    cmp rax, PLAYER_%1_KEY_GO_UP
+    je %%handle_up_%1
+    cmp rax, PLAYER_%1_KEY_GO_DOWN
+    je %%handle_down_%1
+    jmp %%exit_input_handler_%1
+
+%%handle_up_%1:
+    sub qword [Player_%1_Y], PLAYER_STEP_SIZE
+    ClearScreen
+    jmp %%exit_input_handler_%1
+
+%%handle_down_%1:
+    add qword [Player_%1_Y], PLAYER_STEP_SIZE
+    ClearScreen
+    jmp %%exit_input_handler_%1
+
+%%exit_input_handler_%1:
+%endmacro
+
+
 global main
 
 main:
@@ -65,27 +88,9 @@ key_pressed:
 	jmp exit_program
 
 after_esc:
-	cmp rax, PLAYER_1_KEY_GO_UP
-	jne after_up
-	; key is up
-	sub qword [Player_1_Y], PLAYER_1_STEP_SIZE
-	call ClampPlayer
-	ClearScreen
-
-after_up:
-	cmp rax, PLAYER_1_KEY_GO_DOWN
-	jne after_down
-	; key is down
-	add qword [Player_1_Y], PLAYER_1_STEP_SIZE
-	call ClampPlayer
-	ClearScreen
-
-after_down:
-
-	cmp rax, XK_space
-	jne after_space
-	ClearScreen
-after_space:
+	; ---- handle user input
+	HandlePlayerInput 1
+	HandlePlayerInput 2
 
 	; ---- end event handling
 after_events:
