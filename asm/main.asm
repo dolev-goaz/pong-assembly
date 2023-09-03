@@ -4,19 +4,34 @@
 %include "asm/XK_keycodes.asm"
 ; --- constants
 
-DISPLAY_WIDTH		equ 500
-DISPLAY_HEIGHT		equ 600
+DISPLAY_WIDTH			equ 500
+DISPLAY_HEIGHT			equ 600
 
-PLAYER_STEP_SIZE	equ 10
-PLAYER_WIDTH		equ 20
-PLAYER_HEIGHT		equ 80
-PLAYER_X			equ 50
+PLAYER_STEP_SIZE		equ 10
+PLAYER_WIDTH			equ 20
+PLAYER_HEIGHT			equ 80
+PLAYER_BORDER_OFFSET	equ 50
+
+; ==== Player 1 Parameters
+
+PLAYER_1_X				equ PLAYER_BORDER_OFFSET
+PLAYER_1_KEY_GO_UP		equ XK_W
+PLAYER_1_KEY_GO_DOWN	equ XK_S
+PLAYER_1_STEP_SIZE		equ PLAYER_STEP_SIZE
+
+; ==== Player 2 Parameters
+
+PLAYER_2_X				equ DISPLAY_WIDTH - PLAYER_BORDER_OFFSET - PLAYER_WIDTH
+PLAYER_2_KEY_GO_UP		equ XK_Up
+PLAYER_2_KEY_GO_DOWN	equ XK_Down
+PLAYER_2_STEP_SIZE		equ PLAYER_STEP_SIZE
 
 ; --- statically allocated empty data
 section .bss
 
 section .data
-PlayerY dq 50
+Player_1_Y dq 50
+Player_2_Y dq 50
 
 window_title db "Pong", 0
 
@@ -50,18 +65,18 @@ key_pressed:
 	jmp exit_program
 
 after_esc:
-	cmp rax, XK_Up
+	cmp rax, PLAYER_1_KEY_GO_UP
 	jne after_up
 	; key is up
-	sub qword [PlayerY], PLAYER_STEP_SIZE
+	sub qword [Player_1_Y], PLAYER_1_STEP_SIZE
 	call ClampPlayer
 	ClearScreen
 
 after_up:
-	cmp rax, XK_Down
+	cmp rax, PLAYER_1_KEY_GO_DOWN
 	jne after_down
 	; key is down
-	add qword [PlayerY], PLAYER_STEP_SIZE
+	add qword [Player_1_Y], PLAYER_1_STEP_SIZE
 	call ClampPlayer
 	ClearScreen
 
@@ -74,7 +89,8 @@ after_space:
 
 	; ---- end event handling
 after_events:
-	DrawPlayer PLAYER_X, [PlayerY], PLAYER_WIDTH, PLAYER_HEIGHT
+	DrawPlayer PLAYER_1_X, [Player_1_Y], PLAYER_WIDTH, PLAYER_HEIGHT
+	DrawPlayer PLAYER_2_X, [Player_2_Y], PLAYER_WIDTH, PLAYER_HEIGHT
     jmp game_loop
 
 exit_program:
@@ -85,19 +101,19 @@ exit_program:
 ; ------------------------- methods
 
 ClampPlayer:
-	cmp qword [PlayerY], 0
+	cmp qword [Player_1_Y], 0
 	jl .too_high
 
-	mov rbx, [PlayerY]
+	mov rbx, [Player_1_Y]
 	add rbx, PLAYER_HEIGHT
 	cmp rbx, DISPLAY_HEIGHT
 	jg .too_low
 	jmp .exit_clamp
 .too_low:
-	mov qword [PlayerY], DISPLAY_HEIGHT - PLAYER_HEIGHT
+	mov qword [Player_1_Y], DISPLAY_HEIGHT - PLAYER_HEIGHT
 	jmp .exit_clamp
 .too_high:
-	mov qword [PlayerY], 0
+	mov qword [Player_1_Y], 0
 	jmp .exit_clamp
 .exit_clamp:
 	ret
