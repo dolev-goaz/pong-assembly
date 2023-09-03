@@ -241,6 +241,7 @@ GMapWindow:
 ; Draw Rectangle
 ; --------------
 ; Draws a rectangle
+; Receives-	x, y, width, height	(STACK)
 ;---------------------------------------------------
 GDrawRectangle:
 	; TODO: add parameters
@@ -267,9 +268,9 @@ GDrawRectangle:
 	GET_STACK_PARAM r8, 3   ; y
 	add r8, 1               ; offset it to not override border
 	GET_STACK_PARAM r9, 2   ; width
-	sub r9, 2               ; dont overlap border from both sides
+	sub r9, 1               ; dont overlap border
 	GET_STACK_PARAM rbx, 1  ; height
-	sub rbx, 2              ; dont overlap border from both sides
+	sub rbx, 1              ; dont overlap border
 	push rbx
 	call XFillRectangle
 	CLEAR_STACK_PARAMS 1

@@ -1,11 +1,16 @@
 %include "asm/utils.asm"
 %include "asm/graphics.asm"
+%include "asm/graphics_utils.asm"
 %include "asm/XK_keycodes.asm"
 ; --- constants
-DISPLAY_WIDTH	equ 500
-DISPLAY_HEIGHT	equ 600
 
-STEP_SIZE		equ 10
+DISPLAY_WIDTH		equ 500
+DISPLAY_HEIGHT		equ 600
+
+PLAYER_STEP_SIZE	equ 10
+PLAYER_WIDTH		equ 20
+PLAYER_HEIGHT		equ 80
+PLAYER_X			equ 50
 
 ; --- statically allocated empty data
 section .bss
@@ -13,14 +18,14 @@ section .bss
 section .data
 PlayerY dq 50
 
-window_title db "Pong",0
+window_title db "Pong", 0
 
 section .text
 global main
 
 main:
-	push DISPLAY_WIDTH
-	push DISPLAY_HEIGHT
+	push DISPLAY_WIDTH + 1
+	push DISPLAY_HEIGHT + 1
 	call GInitializeDisplay
 	CLEAR_STACK_PARAMS 2
 
@@ -45,25 +50,19 @@ after_esc:
 	cmp rax, XK_Up
 	jne after_up
 	; key is up
-	sub qword [PlayerY], STEP_SIZE
+	sub qword [PlayerY], PLAYER_STEP_SIZE
 
 after_up:
 	cmp rax, XK_Down
 	jne after_down
 	; key is down
-	add qword [PlayerY], STEP_SIZE
+	add qword [PlayerY], PLAYER_STEP_SIZE
 
 after_down:
 
 	; ---- end event handling
 after_events:
-	push 150 ; x
-	; mov rax, [PlayerY]
-	push qword [PlayerY] ; y
-	push 200 ; width
-	push 200 ; height
-	call GDrawRectangle
-	CLEAR_STACK_PARAMS 4
+	DrawRectangle PLAYER_X, [PlayerY], PLAYER_WIDTH, PLAYER_HEIGHT
     jmp game_loop
 
 exit_program:
