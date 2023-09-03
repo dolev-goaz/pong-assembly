@@ -245,25 +245,32 @@ GMapWindow:
 GDrawRectangle:
 	; TODO: add parameters
 
-	; void XDrawRectangle(display, window, gc, x_pxl, y_pxl, width, height)
+	; void XDrawRectangle(display, window, gc, x, y, width, height)
     mov rdi, [display]
     mov rsi, [win]
     mov rdx, [gc_white]
-    mov rcx, 150	; x
-    mov r8, 150		; y
-    mov r9, 200		; width
-	push 300		; height
+    GET_STACK_PARAM rcx, 4  ; x
+    GET_STACK_PARAM r8, 3   ; y
+    GET_STACK_PARAM r9, 2   ; width
+    GET_STACK_PARAM rbx, 1  ; height
+    push rbx                ; height is in the stack for some reason
     call XDrawRectangle
 	CLEAR_STACK_PARAMS 1
 
-	; void XFillRectangle(display, window, gc, x_pxl, y_pxl, width, height)
+	; void XFillRectangle(display, window, gc, x, y, width, height)
 	mov	rdi, [display]
 	mov	rsi, [win]
 	mov	rdx, [gc_black]
-	mov	rcx, 150 + 1	; x (+1 to not overlap border)
-	mov	r8, 150 + 1		; y (+1 to not overlap border)
-	mov	r9, 200 - 2		; width (+2 to not overlap border)
-	push 300 - 2		; height (+2 to not overlap border)
+
+	GET_STACK_PARAM rcx, 4  ; x
+	add rcx, 1              ; offset it to not override border
+	GET_STACK_PARAM r8, 3   ; y
+	add r8, 1               ; offset it to not override border
+	GET_STACK_PARAM r9, 2   ; width
+	sub r9, 2               ; dont overlap border from both sides
+	GET_STACK_PARAM rbx, 1  ; height
+	sub rbx, 2              ; dont overlap border from both sides
+	push rbx
 	call XFillRectangle
 	CLEAR_STACK_PARAMS 1
 
@@ -298,6 +305,12 @@ GCheckWindowEvent:
 ;			otherwise 0 (RAX)
 ;---------------------------------------------------
 GCheckKeyPress:
+	; clear xevent
+	mov rdi, xevent_inner
+	mov rcx, 192 ; sizeof(xevent_inner)
+	xor rax, rax ; rax=0
+	rep stosb	; 'repeat store byte'. repeat count- rcx, stored byte- al, destination address- rdi
+	; end clear
 	PUSH_ADDRESS xevent_inner
 	call GCheckWindowEvent
 	CLEAR_STACK_PARAMS 1

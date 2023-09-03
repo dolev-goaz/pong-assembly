@@ -5,10 +5,13 @@
 DISPLAY_WIDTH	equ 500
 DISPLAY_HEIGHT	equ 600
 
+STEP_SIZE		equ 10
+
 ; --- statically allocated empty data
 section .bss
 
 section .data
+PlayerY dq 50
 
 window_title db "Pong",0
 
@@ -34,12 +37,33 @@ game_loop:
 
 key_pressed:
 	cmp rax, XK_Escape
-	je exit_program
+	jne after_esc
+	; key is esc
+	jmp exit_program
 
+after_esc:
+	cmp rax, XK_Up
+	jne after_up
+	; key is up
+	sub qword [PlayerY], STEP_SIZE
+
+after_up:
+	cmp rax, XK_Down
+	jne after_down
+	; key is down
+	add qword [PlayerY], STEP_SIZE
+
+after_down:
 
 	; ---- end event handling
 after_events:
+	push 150 ; x
+	; mov rax, [PlayerY]
+	push qword [PlayerY] ; y
+	push 200 ; width
+	push 200 ; height
 	call GDrawRectangle
+	CLEAR_STACK_PARAMS 4
     jmp game_loop
 
 exit_program:
