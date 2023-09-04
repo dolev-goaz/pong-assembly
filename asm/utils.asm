@@ -25,6 +25,16 @@ section .text
 	add rsp, WORD_SIZE * %2
 %endmacro
 
+%macro MOV_DATA 2
+    mov rbx, %2
+    mov %1, rbx
+%endmacro
+
+%macro CMP_DATA 2
+    mov rbx, %1
+    cmp rbx, %2
+%endmacro
+
 ; ------------------------------------------------ METHODS --------------------------------------------
 ;-----------------------------------------
 ; EXIT

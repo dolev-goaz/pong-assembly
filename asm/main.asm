@@ -30,6 +30,8 @@ PLAYER_2_STEP_SIZE		equ PLAYER_STEP_SIZE
 section .bss
 
 section .data
+Player_1_Y_OLD dq 50
+Player_2_Y_OLD dq 50
 Player_1_Y dq 50
 Player_2_Y dq 50
 
@@ -50,12 +52,10 @@ section .text
 
 %%handle_up_%1:
     sub qword [Player_%1_Y], PLAYER_STEP_SIZE
-    ClearScreen
     jmp %%exit_input_handler_%1
 
 %%handle_down_%1:
     add qword [Player_%1_Y], PLAYER_STEP_SIZE
-    ClearScreen
     jmp %%exit_input_handler_%1
 
 %%exit_input_handler_%1:
@@ -94,8 +94,17 @@ after_esc:
 
 	; ---- end event handling
 after_events:
+	; check should clear screen(hide player trail)
+	call ShouldRedrawScreen
+	test rax, rax
+	jz draw
+	ClearScreen
+draw:
 	DrawPlayer PLAYER_1_X, [Player_1_Y], PLAYER_WIDTH, PLAYER_HEIGHT
 	DrawPlayer PLAYER_2_X, [Player_2_Y], PLAYER_WIDTH, PLAYER_HEIGHT
+end_game_loop:
+	MOV_DATA [Player_1_Y_OLD], [Player_1_Y]
+	MOV_DATA [Player_2_Y_OLD], [Player_2_Y]
     jmp game_loop
 
 exit_program:
@@ -121,4 +130,19 @@ ClampPlayer:
 	mov qword [Player_1_Y], 0
 	jmp .exit_clamp
 .exit_clamp:
+	ret
+
+
+ShouldRedrawScreen:
+	xor rax, rax ; rax = 0
+	CMP_DATA [Player_1_Y_OLD], [Player_1_Y]
+	jne .should_redraw
+	CMP_DATA [Player_2_Y_OLD], [Player_2_Y]
+	jne .should_redraw
+	jmp .exit_redraw_check
+
+.should_redraw:
+	mov rax, 1
+	jmp .exit_redraw_check
+.exit_redraw_check:
 	ret
