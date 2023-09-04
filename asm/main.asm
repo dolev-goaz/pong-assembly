@@ -4,8 +4,12 @@
 %include "asm/XK_keycodes.asm"
 ; --- constants
 
+; ==== Display Parameters
 DISPLAY_WIDTH			equ 500
 DISPLAY_HEIGHT			equ 600
+
+DISPLAY_CENTER_X		equ DISPLAY_WIDTH / 2
+DISPLAY_CENTER_Y		equ DISPLAY_HEIGHT / 2
 
 PLAYER_STEP_SIZE		equ 10
 PLAYER_WIDTH			equ 20
@@ -26,6 +30,12 @@ PLAYER_2_KEY_GO_UP		equ XK_Up
 PLAYER_2_KEY_GO_DOWN	equ XK_Down
 PLAYER_2_STEP_SIZE		equ PLAYER_STEP_SIZE
 
+; ==== Ball Parameters
+
+BALL_DIAMETER			equ 20
+BALL_START_X			equ DISPLAY_CENTER_X - BALL_DIAMETER / 2
+BALL_START_Y			equ DISPLAY_CENTER_Y - BALL_DIAMETER / 2
+
 ; --- statically allocated empty data
 section .bss
 
@@ -34,6 +44,9 @@ Player_1_Y_OLD dq 50
 Player_2_Y_OLD dq 50
 Player_1_Y dq 50
 Player_2_Y dq 50
+
+Ball_X dq BALL_START_X
+Ball_Y dq BALL_START_Y
 
 window_title db "Pong", 0
 
@@ -109,6 +122,7 @@ after_events:
 draw:
 	DrawPlayer PLAYER_1_X, [Player_1_Y], PLAYER_WIDTH, PLAYER_HEIGHT
 	DrawPlayer PLAYER_2_X, [Player_2_Y], PLAYER_WIDTH, PLAYER_HEIGHT
+	DrawCircle [Ball_X], [Ball_Y], BALL_DIAMETER
 end_game_loop:
 	MOV_DATA [Player_1_Y_OLD], [Player_1_Y]
 	MOV_DATA [Player_2_Y_OLD], [Player_2_Y]
