@@ -4,6 +4,14 @@
 %include "asm/utils.asm"
 
 section .text
+
+; color offsets
+COLOR_BLACK				equ 0
+COLOR_WHITE				equ 1
+COLOR_YELLOW            equ 2
+COLOR_RED               equ 3
+
+; Draw rectangle border
 %macro DrawRectangleBorder 4
     push qword %1
     push qword %2
@@ -12,6 +20,7 @@ section .text
     call GDrawRectangleBorder
 	CLEAR_STACK_PARAMS 4
 %endmacro
+; Draw rectangle
 %macro DrawRectangleFill 4
     push qword %1
     push qword %2
@@ -20,10 +29,23 @@ section .text
     call GDrawRectangle
 	CLEAR_STACK_PARAMS 4
 %endmacro
-; assumes- y is a variable, others are literals
-%macro DrawPlayer 4
-    DrawRectangleBorder %1, %2, %3, %4
+; Set Foreground Color
+%macro SetColor 1
+	push %1
+	call GSetForegroundColor
+	CLEAR_STACK_PARAMS 1
+%endmacro
 
+; Clear screen
+%macro ClearScreen 0
+	SetColor COLOR_BLACK
+	DrawRectangleFill 0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT
+%endmacro
+; Draw player
+%macro DrawPlayer 4
+    SetColor COLOR_WHITE
+    DrawRectangleBorder %1, %2, %3, %4
+    SetColor COLOR_BLACK
     ; this rectangle is smaller to not override the border
     mov rbx, %2
     inc rbx

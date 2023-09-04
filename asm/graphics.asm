@@ -8,6 +8,12 @@ gc_foreground:	dq 4
 
 EventKeyPress:	dd 2
 
+; Color names
+clr_name_black:		db "black", 0
+clr_name_white:		db "white", 0
+clr_name_yellow:	db "yellow", 0
+clr_name_red:		db "red", 0
+
 section .bss
 xevent_inner:	resb 192
 
@@ -15,24 +21,30 @@ display:		resb 8
 screen: 		resb 4
 r_win: 			resb 8
 win: 			resb 8
-gc_black:		resb 8
 gc_white:		resb 8
 colormap: 		resb 8
 
-black: 			resb 4
 white: 			resb 4
 
 xgcvals_white: 	resb 128
-xgcvals_black:	resb 128
+
+xcolors:
+	struc xcolors_struct
+		.black		resb 16
+		.white		resb 16
+		.yellow:	resb 16
+		.red:		resb 16
+		.temp:		resb 16 ; yeah idk why this is here
+	endstruc
 
 
 section .text
 
 extern XOpenDisplay, XDefaultScreen, XDefaultRootWindow
-extern XCreateSimpleWindow, XBlackPixel, XWhitePixel
+extern XCreateSimpleWindow, XWhitePixel
 extern XMapWindow, XSelectInput, XCreateGC, XDefaultColormap
 extern XDrawRectangle, XFillRectangle, XCheckWindowEvent, XCloseDisplay
-extern XkbKeycodeToKeysym, XStoreName
+extern XkbKeycodeToKeysym, XStoreName, XAllocNamedColor, XSetForeground
 
 ; ---------------------- METHODS -------------------
 ;---------------------------------------------------
@@ -56,8 +68,10 @@ GInitializeDisplay:
 
 	CALL_AND_ALLOCATE_STACK GCreateGraphicsContext
 	CALL_AND_ALLOCATE_STACK GDefaultColorMap
+	CALL_AND_ALLOCATE_STACK GInitializeColors
 	CALL_AND_ALLOCATE_STACK GSelectInput
 	CALL_AND_ALLOCATE_STACK GMapWindow
+
 	ret
 
 ; ---------------------- METHODS -------------------
@@ -88,16 +102,9 @@ GDefaultScreen:
 ;---------------------------------------------------
 ; Pixels
 ; ------
-; Gets and stores the black and white colors in
-; [black] and [white] respectively
+; Gets and stores the white color into [white]
 ;---------------------------------------------------
 GPixels:
-	; int XBlackPixel(display, screen)
-	mov	rdi, [display]
-	mov	rsi, [screen]
-	CALL_AND_ALLOCATE_STACK XBlackPixel
-	mov	[black], eax
-
 	; int XWhitePixel(display, screen)
 	mov	rdi, [display]
 	mov	rsi, [screen]
@@ -125,7 +132,7 @@ GRootWindow:
 ; Returns-	the created window([win])
 ;---------------------------------------------------
 GCreateWindow:
-	; Window XCreateSimpleWindow(display, r_win, 0, 0, width, height, 0, black, black)
+	; Window XCreateSimpleWindow(display, r_win, 0, 0, width, height)
 	mov rdi, [display]		; display
 	mov rsi, [r_win]		; window
 	mov rdx, 0				; window position x (doesn't work?)
@@ -164,10 +171,9 @@ GSetTitle:
 ;---------------------------------------------------
 ; Create Graphics Context
 ; -----------------------
-; Creates the graphics context for the colors black
-; and white.
+; Creates the graphics context for the color white.
 ; --------------------------------------------------
-; Returns-	the created context([gc_black], [gc_white])
+; Returns-	the created context([gc_white])
 ;---------------------------------------------------
 GCreateGraphicsContext:
 	; GC XCreateGC(display, win, GCForeground, &values_white)
@@ -180,17 +186,51 @@ GCreateGraphicsContext:
 	CALL_AND_ALLOCATE_STACK XCreateGC
 	mov	[gc_white], rax
 
-	; GC XCreateGC(display, win, GCForeground, &values_black)
-	mov	ecx, [black]
-	mov	[xgcvals_black + 16], ecx	; offsetof(XGCValues, foreground) == 16
-	mov	rdi, [display]
-	mov	rsi, [win]
-	mov	rdx, [gc_foreground]
-	mov	rcx, xgcvals_black
-	CALL_AND_ALLOCATE_STACK XCreateGC
-	mov	[gc_black], rax
-
 	ret
+
+%macro InitializeColor 1
+	; XAllocNamedColor(display, colormap, %1, xcol_struct.%1, xcol_struct.temp)
+	mov rdi, [display]
+	mov rsi, [colormap],
+	mov rdx, clr_name_%1
+	mov rcx, xcolors
+	add rcx, xcolors_struct.%1
+	mov r8, xcolors
+	add r8, xcolors_struct.temp
+
+	CALL_AND_ALLOCATE_STACK XAllocNamedColor
+%endmacro
+;---------------------------------------------------
+; Initialize colors
+; -----------------------
+; Initializes named colors
+; --------------------------------------------------
+; Returns-	the initialized colors([xcolors])
+;---------------------------------------------------
+GInitializeColors:
+	InitializeColor black
+	InitializeColor white
+	InitializeColor yellow
+	InitializeColor red
+	ret
+
+;---------------------------------------------------
+; Set Foreground color
+; -----------------------
+; Sets the current color
+; --------------------------------------------------
+; Receives- the color index (STACK)
+;---------------------------------------------------
+GSetForegroundColor:
+	; void XSetForeground(display, gc_draw, XColor.pixel)
+	mov	eax, 16 ; size of color
+	GET_STACK_PARAM r11, 1
+	mul	r11d	; offset from start of colors
+
+	mov	rdi, [display]
+	mov	rsi, [gc_white]
+	mov	rdx, [xcolors + eax]	; offsetof(XColor, pixel) == 0
+	CALL_AND_ALLOCATE_STACK XSetForeground
 
 
 ;---------------------------------------------------
@@ -269,7 +309,7 @@ GDrawRectangle:
 	; void XFillRectangle(display, window, gc, x, y, width, height)
 	mov	rdi, [display]
 	mov	rsi, [win]
-	mov	rdx, [gc_black]
+	mov	rdx, [gc_white]
 
 	GET_STACK_PARAM rcx, 4  ; x
 	GET_STACK_PARAM r8, 3   ; y

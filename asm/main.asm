@@ -38,9 +38,6 @@ Player_2_Y dq 50
 window_title db "Pong", 0
 
 section .text
-%macro ClearScreen 0
-	DrawRectangleFill 0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT
-%endmacro
 
 %macro HandlePlayerInput 1
 	; ok, so basically, %% is dark magic for nasm
