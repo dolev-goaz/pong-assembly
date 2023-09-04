@@ -94,6 +94,16 @@ after_esc:
 
 	; ---- end event handling
 after_events:
+	; clamp player positions
+	push qword [Player_1_Y]
+	call ClampPlayer
+	CLEAR_STACK_PARAMS 1
+	mov [Player_1_Y], rax
+
+	push qword [Player_2_Y]
+	call ClampPlayer
+	CLEAR_STACK_PARAMS 1
+	mov [Player_2_Y], rax
 	; check should clear screen(hide player trail)
 	call ShouldRedrawScreen
 	test rax, rax
@@ -115,19 +125,20 @@ exit_program:
 ; ------------------------- methods
 
 ClampPlayer:
-	cmp qword [Player_1_Y], 0
+	GET_STACK_PARAM rbx, 1
+	cmp rbx, 0
 	jl .too_high
 
-	mov rbx, [Player_1_Y]
 	add rbx, PLAYER_HEIGHT
 	cmp rbx, DISPLAY_HEIGHT
 	jg .too_low
+	GET_STACK_PARAM rax, 1 ; return the previous y
 	jmp .exit_clamp
 .too_low:
-	mov qword [Player_1_Y], DISPLAY_HEIGHT - PLAYER_HEIGHT
+	mov rax, DISPLAY_HEIGHT - PLAYER_HEIGHT ; return the bottom of the screen
 	jmp .exit_clamp
 .too_high:
-	mov qword [Player_1_Y], 0
+	mov rax, 0								; return the top of the screen
 	jmp .exit_clamp
 .exit_clamp:
 	ret
