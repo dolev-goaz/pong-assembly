@@ -45,6 +45,7 @@ extern XCreateSimpleWindow, XWhitePixel
 extern XMapWindow, XSelectInput, XCreateGC, XDefaultColormap
 extern XDrawRectangle, XFillRectangle, XCheckWindowEvent, XCloseDisplay
 extern XkbKeycodeToKeysym, XStoreName, XAllocNamedColor, XSetForeground
+extern XFlush
 
 ; ---------------------- METHODS -------------------
 ;---------------------------------------------------
@@ -319,6 +320,16 @@ GDrawRectangle:
 	call XFillRectangle
 	CLEAR_STACK_PARAMS 1
 
+	ret
+
+;---------------------------------------------------
+; Flush
+; -----
+; Not sure what it does really
+;---------------------------------------------------
+GFlush:
+	mov rdi, [display]
+	CALL_AND_ALLOCATE_STACK XFlush
 	ret
 
 
