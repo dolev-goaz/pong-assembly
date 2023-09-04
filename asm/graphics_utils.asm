@@ -11,6 +11,12 @@ COLOR_WHITE				equ 1
 COLOR_YELLOW            equ 2
 COLOR_RED               equ 3
 
+
+; Draw a circle
+%macro DrawCircle 3
+    SetColor COLOR_RED
+    DrawRectangleFill %1, %2, %3, %3
+%endmacro
 ; Draw rectangle border
 %macro DrawRectangleBorder 4
     push qword %1
