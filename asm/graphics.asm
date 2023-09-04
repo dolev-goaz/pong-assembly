@@ -13,6 +13,7 @@ clr_name_black:		db "black", 0
 clr_name_white:		db "white", 0
 clr_name_yellow:	db "yellow", 0
 clr_name_red:		db "red", 0
+clr_name_teal:		db "teal", 0
 
 section .bss
 xevent_inner:	resb 192
@@ -34,6 +35,7 @@ xcolors:
 		.white		resb 16
 		.yellow:	resb 16
 		.red:		resb 16
+		.teal:		resb 16
 		.temp:		resb 16 ; yeah idk why this is here
 	endstruc
 
@@ -213,6 +215,7 @@ GInitializeColors:
 	InitializeColor white
 	InitializeColor yellow
 	InitializeColor red
+	InitializeColor teal
 	ret
 
 ;---------------------------------------------------
