@@ -87,9 +87,16 @@ main:
 	;Infinite Game loop
 game_loop:
 
-	call GCheckKeyPress
-	test rax, rax ; check if rax is not zero- a key was pressed
+	call GCheckWindowEvent
+	test rax, rax
 	jz after_events
+	call GCheckExpose
+	cmp rax, 0
+	jne draw
+	call GCheckKeyPress
+	cmp rax, 0 ; check if rax is not zero- a key was pressed
+	jne key_pressed
+	jmp after_events ; Shouldn't happen- an event was raised
 
 key_pressed:
 	cmp rax, XK_Escape

@@ -7,6 +7,8 @@ KeyPressMask:	dq 1
 gc_foreground:	dq 4
 
 EventKeyPress:	dd 2
+EventExpose:	dd 12
+
 
 ; Color names
 clr_name_black:		db "black", 0
@@ -342,16 +344,42 @@ GFlush:
 ; Checks if exposure or keypress events were
 ; triggered
 ; --------------------------------------------------
-; Returns-	the current event([STACK_xevent])
+; Returns-	the current event([xevent_inner])
 ;---------------------------------------------------
 GCheckWindowEvent:
+	; ---- clear previous event
+	mov rdi, xevent_inner
+	mov rcx, 192 ; sizeof(xevent_inner)
+	xor rax, rax ; rax=0
+	rep stosb	; 'repeat store byte'. repeat count- rcx, stored byte- al, destination address- rdi
+	; ---- get current event
 	mov	rdi, [display]
 	mov	rsi, [win]
 	mov	rdx, [ExposureMask]
 	or	rdx, [KeyPressMask]
+	mov rcx, xevent_inner
 
-	GET_STACK_PARAM rcx, 1 ; rcx = xevent
 	CALL_AND_ALLOCATE_STACK XCheckWindowEvent
+	ret
+
+;---------------------------------------------------
+; Check Expose
+; ------------
+; Checks if an expose event was triggered
+; --------------------------------------------------
+; Receives-	the current event(xevent_inner)
+; Returns- 	If an expose event was raised(rax)
+;---------------------------------------------------
+GCheckExpose:
+	mov rax, 0
+
+	mov ecx, [xevent_inner + 0] 	; offsetof(xevent_inner, type) == 0
+	cmp ecx, [EventExpose]
+	jne .finished_expose
+
+	mov rax, 1
+
+.finished_expose:
 	ret
 
 ;---------------------------------------------------
@@ -360,20 +388,11 @@ GCheckWindowEvent:
 ; Checks if a key press event was triggered.
 ; If it was, returns the XK code.
 ; --------------------------------------------------
-; Returns- 	XK code if a key was pressed,
+; Receives-	the current event(xevent_inner)
+; Returns-	XK code if a key was pressed,
 ;			otherwise 0 (RAX)
 ;---------------------------------------------------
 GCheckKeyPress:
-	; clear xevent
-	mov rdi, xevent_inner
-	mov rcx, 192 ; sizeof(xevent_inner)
-	xor rax, rax ; rax=0
-	rep stosb	; 'repeat store byte'. repeat count- rcx, stored byte- al, destination address- rdi
-	; end clear
-	PUSH_ADDRESS xevent_inner
-	call GCheckWindowEvent
-	CLEAR_STACK_PARAMS 1
-
 	mov rax, 0
 
 	mov	ecx, [xevent_inner + 0] 	; offsetof(xevent_inner, type) == 0
