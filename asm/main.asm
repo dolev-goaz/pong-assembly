@@ -11,7 +11,7 @@ extern	clock, usleep
 CLOCKS_PER_MS			equ 1000
 
 ; ==== Display Parameters
-DISPLAY_WIDTH			equ 500
+DISPLAY_WIDTH			equ 800
 DISPLAY_HEIGHT			equ 600
 
 DISPLAY_CENTER_X		equ DISPLAY_WIDTH / 2

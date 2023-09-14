@@ -34,6 +34,14 @@ COLOR_TEAL              equ 4
     push qword %3
     push qword %4
     call GDrawRectangle
+    CLEAR_STACK_PARAMS 4
+%endmacro
+%macro DrawLine 4
+    push qword %1
+    push qword %2
+    push qword %3
+    push qword %4
+    call GDrawLine
 	CLEAR_STACK_PARAMS 4
 %endmacro
 ; Set Foreground Color
@@ -45,8 +53,13 @@ COLOR_TEAL              equ 4
 
 ; Clear screen
 %macro ClearScreen 0
+    ; black screen
 	SetColor COLOR_BLACK
 	DrawRectangleFill 0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT
+
+    ; field seperator
+    SetColor COLOR_WHITE
+    DrawLine DISPLAY_WIDTH / 2, 0, DISPLAY_WIDTH / 2, DISPLAY_HEIGHT
 %endmacro
 ; Draw player
 %macro DrawPlayer 4

@@ -49,7 +49,7 @@ extern XCreateSimpleWindow, XWhitePixel
 extern XMapWindow, XSelectInput, XCreateGC, XDefaultColormap
 extern XDrawRectangle, XFillRectangle, XCheckWindowEvent, XCloseDisplay
 extern XkbKeycodeToKeysym, XStoreName, XAllocNamedColor, XSetForeground
-extern XFlush
+extern XDrawLine, XFlush
 
 ; ---------------------- METHODS -------------------
 ;---------------------------------------------------
@@ -281,6 +281,26 @@ GMapWindow:
 	mov	rdi, [display]
 	mov	rsi, [win]
 	CALL_AND_ALLOCATE_STACK XMapWindow
+	ret
+
+;---------------------------------------------------
+; Draw Line
+; ---------------------
+; Draws a line
+; Receives-	x1, y1, x2, y2 (STACK)
+;---------------------------------------------------
+GDrawLine:
+	; void XDrawLine(display, win, gc, x1, y1, x2, y2)
+	mov rdi, [display]
+	mov rsi, [win]
+	mov rdx, [gc_white]
+	GET_STACK_PARAM rcx, 4
+	GET_STACK_PARAM r8, 3
+	GET_STACK_PARAM r9, 2
+	GET_STACK_PARAM rbx, 1
+	push rbx
+	call XDrawLine
+	CLEAR_STACK_PARAMS 1
 	ret
 
 ;---------------------------------------------------
