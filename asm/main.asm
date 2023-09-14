@@ -144,6 +144,12 @@ end_game_loop:
     jmp game_loop
 
 ; ------------------------- methods
+
+;----------------------------------------------------------
+; Handle Event
+; -----------------
+; Handles the game exit and player movement keyboard events
+;----------------------------------------------------------
 HandleEvent:
 	CALL_AND_ALLOCATE_STACK GCheckKeyPress
 	cmp rax, 0 ; check if rax is not zero- a key was pressed
@@ -164,8 +170,15 @@ HandleEvent:
     push 0
     call exit
 	ret ; unreachable code
-; =====
 
+;-------------------------------------------------------
+; Update Game Logic
+; -----------------
+; Applies game logic:
+; 1.	player clamping
+; 2.	ball movement/bounce
+; 3.	scoring and resetting the ball
+;-------------------------------------------------------
 UpdateGameLogic:
 	; clamp player positions
 	push qword [Player_1_Y]
@@ -203,18 +216,41 @@ UpdateGameLogic:
 .exit_game_logic
 	ret
 
+;------------------------------------------------------------
+; Sleep
+; -----
+; Sleeps for a given amount of time
+; -----------------------------------------------------------
+; Receives-	the amount of time to sleep in NANOseconds(STACK)
+;------------------------------------------------------------
 Sleep:
 	GET_STACK_PARAM rdi, 1
     call usleep
 	ret
 
+;-------------------------------------------------------
+; Get Current Time
+; ----------------
+; Returns the current time
+; ------------------------------------------------------
+; Receives-	the address to store the current time(STACK)
+; Returns- 	the current time(DATA)
+;-------------------------------------------------------
 GetCurrentTime:
 	GET_STACK_PARAM rbx, 1
 	call clock
 	mov [rbx], rax
     ret
 
-
+;---------------------------------------------------
+; Clamp player
+; ------------
+; Clamps a player's y position to be inside the
+; display
+; --------------------------------------------------
+; Receives-	the player's y coordinate(STACK)
+; Returns- 	the updated player's y coordinate(RAX)
+;---------------------------------------------------
 ClampPlayer:
 	GET_STACK_PARAM rbx, 1
 	cmp rbx, 0
