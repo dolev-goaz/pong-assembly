@@ -118,7 +118,7 @@ draw:
 	DrawPlayer PLAYER_1_X, [Player_1_Y], PLAYER_WIDTH, PLAYER_HEIGHT
 	DrawPlayer PLAYER_2_X, [Player_2_Y], PLAYER_WIDTH, PLAYER_HEIGHT
 	DrawCircle [Ball_X], [Ball_Y], BALL_DIAMETER
-end_game_loop:
+time_sync:
 ; Time handling
 
 	PUSH_ADDRESS frame_end
@@ -133,19 +133,13 @@ end_game_loop:
 	add rax, [frame_start]
 	sub rax, [frame_end]
 	cmp rax, 0
-	jle no_sleep
+	jle end_game_loop
 	push rax
 	call Sleep
 	CLEAR_STACK_PARAMS 1
 
-no_sleep:
+end_game_loop:
     jmp game_loop
-
-exit_program:
-    call GCloseDisplay
-    push 0
-    call exit
-	ret ; unreachable code
 
 ; ------------------------- methods
 HandleEvent:
@@ -156,15 +150,18 @@ HandleEvent:
 
 .key_pressed:
 	cmp rax, XK_Escape
-	jne .after_esc
-	; key is esc
-	call exit_program
+	je .exit_program
+	; key isn't escape
 
-.after_esc:
 	; ---- handle user input
 	HandlePlayerInput 1
 	HandlePlayerInput 2
 	ret
+.exit_program:
+    call GCloseDisplay
+    push 0
+    call exit
+	ret ; unreachable code
 ; =====
 
 UpdateGameLogic:
