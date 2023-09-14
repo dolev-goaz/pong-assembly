@@ -41,7 +41,7 @@ PLAYER_2_STEP_SIZE		equ PLAYER_STEP_SIZE
 BALL_DIAMETER			equ 20
 BALL_START_X			equ DISPLAY_CENTER_X - BALL_DIAMETER / 2
 BALL_START_Y			equ DISPLAY_CENTER_Y - BALL_DIAMETER / 2
-; BALL_STEP_SIZE			equ 3
+BALL_COLLIDE_ERR		equ 10
 
 ; --- statically allocated empty data
 section .bss
@@ -234,9 +234,11 @@ UpdateGameLogic:
 	mov rcx, PLAYER_1_X
 	add rcx, PLAYER_WIDTH
 	sub rcx, [Ball_X]
-	CheckInRange rcx, 0, 10, .player_2_bounce
+	CheckInRange rcx, 0, BALL_COLLIDE_ERR, .player_2_bounce
 	; ball hit player
 	mov qword rax, [Ball_X_Speed]
+	test rax, rax
+	jns .exit_game_logic ; only negate direction if wasn't already negated
 	neg rax
 	mov qword [Ball_X_Speed], rax
 
@@ -253,9 +255,11 @@ UpdateGameLogic:
 	mov qword rcx, [Ball_X]
 	add rcx, BALL_DIAMETER
 	sub rcx, PLAYER_2_X
-	CheckInRange rcx, 0, 10, .exit_game_logic
+	CheckInRange rcx, 0, BALL_COLLIDE_ERR, .exit_game_logic
 	; ball hit player
 	mov qword rax, [Ball_X_Speed]
+	test rax, rax
+	js .exit_game_logic ; only negate direction if wasn't already negated
 	neg rax
 	mov qword [Ball_X_Speed], rax
 
