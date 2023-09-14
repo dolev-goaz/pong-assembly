@@ -6,6 +6,10 @@
 
 extern	clock, usleep
 
+; === Time Constants
+
+CLOCKS_PER_MS			equ 1000
+
 ; ==== Display Parameters
 DISPLAY_WIDTH			equ 500
 DISPLAY_HEIGHT			equ 600
@@ -18,7 +22,7 @@ PLAYER_WIDTH			equ 20
 PLAYER_HEIGHT			equ 80
 PLAYER_BORDER_OFFSET	equ 50
 
-FRAME_RATE				equ 40
+FRAME_RATE				equ 60
 FRAME_TIME_MS			equ 1000 / FRAME_RATE
 FRAME_TIME_NS			equ 1000 * FRAME_TIME_MS
 
@@ -338,6 +342,8 @@ Sleep:
 GetCurrentTime:
 	GET_STACK_PARAM rbx, 1
 	call clock
+	mov rcx, CLOCKS_PER_MS
+	div rcx ; rax is now in ms
 	mov [rbx], rax
     ret
 
