@@ -52,8 +52,10 @@ frame_start		resb 8
 frame_end		resb 8
 
 section .data
-Player_1_Y dq (DISPLAY_HEIGHT - PLAYER_HEIGHT) / 2
-Player_2_Y dq (DISPLAY_HEIGHT - PLAYER_HEIGHT) / 2
+Player_1_Y		dq (DISPLAY_HEIGHT - PLAYER_HEIGHT) / 2
+Player_1_Score	dq 0
+Player_2_Y		dq (DISPLAY_HEIGHT - PLAYER_HEIGHT) / 2
+Player_2_Score	dq 0
 
 Ball_X			dq BALL_START_X
 Ball_Y			dq BALL_START_Y
@@ -238,11 +240,11 @@ UpdateGameLogic:
 	; ball hit player
 	mov qword rax, [Ball_X_Speed]
 	test rax, rax
-	jns .exit_game_logic ; only negate direction if wasn't already negated
+	jns .after_player_bounce ; only negate direction if wasn't already negated
 	neg rax
 	mov qword [Ball_X_Speed], rax
 
-	jmp .exit_game_logic
+	jmp .after_player_bounce
 
 .player_2_bounce:
 	; player 2 (right)
@@ -250,20 +252,36 @@ UpdateGameLogic:
 	call CheckBallWithinPlayerY
 	CLEAR_STACK_PARAMS 1
 	test rax, rax
-	jz .exit_game_logic
+	jz .after_player_bounce
 	; === logic here
 	mov qword rcx, [Ball_X]
 	add rcx, BALL_DIAMETER
 	sub rcx, PLAYER_2_X
-	CheckInRange rcx, 0, BALL_COLLIDE_ERR, .exit_game_logic
+	CheckInRange rcx, 0, BALL_COLLIDE_ERR, .after_player_bounce
 	; ball hit player
 	mov qword rax, [Ball_X_Speed]
 	test rax, rax
-	js .exit_game_logic ; only negate direction if wasn't already negated
+	js .after_player_bounce ; only negate direction if wasn't already negated
 	neg rax
 	mov qword [Ball_X_Speed], rax
 
-.exit_game_logic:
+.after_player_bounce:
+	cmp qword [Ball_X], 0
+	jle .player_2_score
+	mov rax, [Ball_X]
+	add rax, BALL_DIAMETER
+	cmp rax, DISPLAY_WIDTH
+	jge .player_1_score
+	jmp .after_game_logic
+.player_1_score:
+	inc qword [Player_1_Score]
+	jmp .reset_ball
+.player_2_score:
+	inc qword [Player_2_Score]
+.reset_ball:
+	mov qword [Ball_X], BALL_START_X
+	mov qword [Ball_Y], BALL_START_Y
+.after_game_logic:
 	ret
 
 
