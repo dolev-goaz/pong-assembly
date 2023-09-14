@@ -49,7 +49,7 @@ extern XCreateSimpleWindow, XWhitePixel
 extern XMapWindow, XSelectInput, XCreateGC, XDefaultColormap
 extern XDrawRectangle, XFillRectangle, XCheckWindowEvent, XCloseDisplay
 extern XkbKeycodeToKeysym, XStoreName, XAllocNamedColor, XSetForeground
-extern XDrawLine, XFlush
+extern XDrawLine, XFillArc, XFlush
 
 ; ---------------------- METHODS -------------------
 ;---------------------------------------------------
@@ -284,8 +284,30 @@ GMapWindow:
 	ret
 
 ;---------------------------------------------------
+; Draw Circle
+; -----------
+; Draws a circle
+; Receives-	x, y, radius (STACK)
+;---------------------------------------------------
+GDrawCircle:
+	; void XFillArc(display, win, gc, x, y, radius, radius, 0, 360*64)
+	mov rdi, [display]
+	mov rsi, [win]
+	mov rdx, [gc_white]
+	GET_STACK_PARAM rcx, 3	; x
+	GET_STACK_PARAM r8, 2	; y
+	GET_STACK_PARAM r9, 1	; width
+	push 360 * 64	; end angle
+	push 0			; start angle
+	push r9			; height
+
+	call XFillArc
+	CLEAR_STACK_PARAMS 3
+	ret
+
+;---------------------------------------------------
 ; Draw Line
-; ---------------------
+; ---------
 ; Draws a line
 ; Receives-	x1, y1, x2, y2 (STACK)
 ;---------------------------------------------------
@@ -294,11 +316,11 @@ GDrawLine:
 	mov rdi, [display]
 	mov rsi, [win]
 	mov rdx, [gc_white]
-	GET_STACK_PARAM rcx, 4
-	GET_STACK_PARAM r8, 3
-	GET_STACK_PARAM r9, 2
+	GET_STACK_PARAM rcx, 4	; x1
+	GET_STACK_PARAM r8, 3	; y1
+	GET_STACK_PARAM r9, 2	; x2
 	GET_STACK_PARAM rbx, 1
-	push rbx
+	push rbx				; y2
 	call XDrawLine
 	CLEAR_STACK_PARAMS 1
 	ret

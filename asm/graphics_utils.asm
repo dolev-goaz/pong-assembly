@@ -16,7 +16,12 @@ COLOR_TEAL              equ 4
 ; Draw a circle
 %macro DrawCircle 3
     SetColor COLOR_TEAL
-    DrawRectangleFill %1, %2, %3, %3
+    push qword %1
+    push qword %2
+    push qword %3
+    call GDrawCircle
+	CLEAR_STACK_PARAMS 3
+
 %endmacro
 ; Draw rectangle border
 %macro DrawRectangleBorder 4
