@@ -133,7 +133,7 @@ draw:
 	ClearScreen
 	DrawPlayer PLAYER_1_X, [Player_1_Y], PLAYER_WIDTH, PLAYER_HEIGHT
 	DrawPlayer PLAYER_2_X, [Player_2_Y], PLAYER_WIDTH, PLAYER_HEIGHT
-	DrawCircle [Ball_X], [Ball_Y], BALL_DIAMETER
+	DrawBall [Ball_X], [Ball_Y], BALL_DIAMETER
 time_sync:
 ; Time handling
 
