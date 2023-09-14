@@ -41,7 +41,7 @@ PLAYER_2_STEP_SIZE		equ PLAYER_STEP_SIZE
 BALL_DIAMETER			equ 20
 BALL_START_X			equ DISPLAY_CENTER_X - BALL_DIAMETER / 2
 BALL_START_Y			equ DISPLAY_CENTER_Y - BALL_DIAMETER / 2
-BALL_STEP_SIZE			equ 3
+; BALL_STEP_SIZE			equ 3
 
 ; --- statically allocated empty data
 section .bss
@@ -55,8 +55,10 @@ section .data
 Player_1_Y dq 50
 Player_2_Y dq 50
 
-Ball_X dq BALL_START_X
-Ball_Y dq BALL_START_Y
+Ball_X			dq BALL_START_X
+Ball_Y			dq BALL_START_Y
+Ball_X_Speed	dq 1
+Ball_Y_Speed	dq 6
 
 window_title db "Pong", 0
 
@@ -177,9 +179,28 @@ UpdateGameLogic:
 	mov [Player_2_Y], rax
 
 	; move ball
+	mov qword rax, [Ball_Y_Speed]
+	add [Ball_Y], rax
 
-	add qword [Ball_X], BALL_STEP_SIZE
+	mov qword rax, [Ball_X_Speed]
+	add [Ball_X], rax
 
+	; constrain ball in game bounds(y axis)
+
+	mov qword rax, [Ball_Y]
+	add rax, BALL_DIAMETER
+	cmp rax, DISPLAY_HEIGHT
+	jge .bounce_ball_y
+
+	cmp qword [Ball_Y], 0
+	jle .bounce_ball_y
+	jmp .exit_game_logic
+.bounce_ball_y:
+	mov qword rax, [Ball_Y_Speed]
+	neg rax
+	mov qword [Ball_Y_Speed], rax
+
+.exit_game_logic
 	ret
 
 Sleep:
