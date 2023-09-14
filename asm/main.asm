@@ -22,14 +22,14 @@ FRAME_RATE				equ 40
 FRAME_TIME_MS			equ 1000 / FRAME_RATE
 FRAME_TIME_NS			equ 1000 * FRAME_TIME_MS
 
-; ==== Player 1 Parameters
+; ==== Player 1(left player) Parameters
 
 PLAYER_1_X				equ PLAYER_BORDER_OFFSET
 PLAYER_1_KEY_GO_UP		equ XK_W
 PLAYER_1_KEY_GO_DOWN	equ XK_S
 PLAYER_1_STEP_SIZE		equ PLAYER_STEP_SIZE
 
-; ==== Player 2 Parameters
+; ==== Player 2(right player) Parameters
 
 PLAYER_2_X				equ DISPLAY_WIDTH - PLAYER_BORDER_OFFSET - PLAYER_WIDTH
 PLAYER_2_KEY_GO_UP		equ XK_Up
@@ -52,13 +52,13 @@ frame_start		resb 8
 frame_end		resb 8
 
 section .data
-Player_1_Y dq 50
-Player_2_Y dq 50
+Player_1_Y dq (DISPLAY_HEIGHT - PLAYER_HEIGHT) / 2
+Player_2_Y dq (DISPLAY_HEIGHT - PLAYER_HEIGHT) / 2
 
 Ball_X			dq BALL_START_X
 Ball_Y			dq BALL_START_Y
-Ball_X_Speed	dq 1
-Ball_Y_Speed	dq 6
+Ball_X_Speed	dq 3
+Ball_Y_Speed	dq 2
 
 window_title db "Pong", 0
 
@@ -81,6 +81,14 @@ section .text
     jmp %%exit_input_handler_%1
 
 %%exit_input_handler_%1:
+%endmacro
+
+; register, low end, high end, fallback label
+%macro CheckInRange 4
+	cmp %1, %2
+	jl %4
+	cmp %1, %3
+	jg %4
 %endmacro
 
 
@@ -207,13 +215,82 @@ UpdateGameLogic:
 
 	cmp qword [Ball_Y], 0
 	jle .bounce_ball_y
-	jmp .exit_game_logic
+	jmp .after_wall_bounce
 .bounce_ball_y:
 	mov qword rax, [Ball_Y_Speed]
 	neg rax
 	mov qword [Ball_Y_Speed], rax
 
-.exit_game_logic
+.after_wall_bounce:
+
+	; player 1 (left)
+	push qword [Player_1_Y]
+	call CheckBallWithinPlayerY
+	CLEAR_STACK_PARAMS 1
+	test rax, rax
+	jz .player_2_bounce
+	; === logic here
+
+	mov rcx, PLAYER_1_X
+	add rcx, PLAYER_WIDTH
+	sub rcx, [Ball_X]
+	CheckInRange rcx, 0, 10, .player_2_bounce
+	; ball hit player
+	mov qword rax, [Ball_X_Speed]
+	neg rax
+	mov qword [Ball_X_Speed], rax
+
+	jmp .exit_game_logic
+
+.player_2_bounce:
+	; player 2 (right)
+	push qword [Player_2_Y]
+	call CheckBallWithinPlayerY
+	CLEAR_STACK_PARAMS 1
+	test rax, rax
+	jz .exit_game_logic
+	; === logic here
+	mov qword rcx, [Ball_X]
+	add rcx, BALL_DIAMETER
+	sub rcx, PLAYER_2_X
+	CheckInRange rcx, 0, 10, .exit_game_logic
+	; ball hit player
+	mov qword rax, [Ball_X_Speed]
+	neg rax
+	mov qword [Ball_X_Speed], rax
+
+.exit_game_logic:
+	ret
+
+
+;------------------------------------------------------------
+; Check Ball Within Player Y
+; --------------------------
+; Checks if the ball is within a player's Y coordinates
+; -----------------------------------------------------------
+; Receives-	the player's y(STACK)
+; Returns-	whether the ball is within the player's y (RAX)
+;------------------------------------------------------------
+CheckBallWithinPlayerY:
+	GET_STACK_PARAM rdi, 1
+	mov rax, 0 ; output- flag
+
+	; check ball is above lower end
+	; if (ball.y < (player.y + player.h))
+	mov rcx, rdi
+	add rcx, PLAYER_HEIGHT
+	cmp qword [Ball_Y], rcx
+	jge .finish_check_within
+
+	; check ball is below higher end
+	; if ((ball.y + ball.h) > player.y)
+	mov rcx, [Ball_Y]
+	add rcx, BALL_DIAMETER
+	cmp rcx, rdi
+	jle .finish_check_within
+	mov rax, 1
+
+.finish_check_within:
 	ret
 
 ;------------------------------------------------------------
