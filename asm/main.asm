@@ -4,6 +4,8 @@
 %include "asm/XK_keycodes.asm"
 ; --- constants
 
+extern	clock, usleep
+
 ; ==== Display Parameters
 DISPLAY_WIDTH			equ 500
 DISPLAY_HEIGHT			equ 600
@@ -15,6 +17,10 @@ PLAYER_STEP_SIZE		equ 10
 PLAYER_WIDTH			equ 20
 PLAYER_HEIGHT			equ 80
 PLAYER_BORDER_OFFSET	equ 50
+
+FRAME_RATE				equ 40
+FRAME_TIME_MS			equ 1000 / FRAME_RATE
+FRAME_TIME_NS			equ 1000 * FRAME_TIME_MS
 
 ; ==== Player 1 Parameters
 
@@ -35,13 +41,17 @@ PLAYER_2_STEP_SIZE		equ PLAYER_STEP_SIZE
 BALL_DIAMETER			equ 20
 BALL_START_X			equ DISPLAY_CENTER_X - BALL_DIAMETER / 2
 BALL_START_Y			equ DISPLAY_CENTER_Y - BALL_DIAMETER / 2
+BALL_STEP_SIZE			equ 3
 
 ; --- statically allocated empty data
 section .bss
 
+temp 		resb 24 ; Weird color overflow when using frame_start
+
+frame_start		resb 8
+frame_end		resb 8
+
 section .data
-Player_1_Y_OLD dq 50
-Player_2_Y_OLD dq 50
 Player_1_Y dq 50
 Player_2_Y dq 50
 
@@ -87,30 +97,77 @@ main:
 	;Infinite Game loop
 game_loop:
 
+	PUSH_ADDRESS frame_start
+	call GetCurrentTime
+	CLEAR_STACK_PARAMS 1
+
+
 	call GCheckWindowEvent
 	test rax, rax
-	jz after_events
+	jz game_logic
 	call GCheckExpose
 	cmp rax, 0
 	jne draw
-	call GCheckKeyPress
+	call HandleEvent
+
+game_logic:
+	call UpdateGameLogic
+	
+draw:
+	ClearScreen
+	DrawPlayer PLAYER_1_X, [Player_1_Y], PLAYER_WIDTH, PLAYER_HEIGHT
+	DrawPlayer PLAYER_2_X, [Player_2_Y], PLAYER_WIDTH, PLAYER_HEIGHT
+	DrawCircle [Ball_X], [Ball_Y], BALL_DIAMETER
+end_game_loop:
+; Time handling
+
+	PUSH_ADDRESS frame_end
+	call GetCurrentTime
+	CLEAR_STACK_PARAMS 1
+
+
+	; sleep if elapsed is less than frame_time
+	; rax	= FRAME_TIME - ELAPSED = FRAME_TIME - (frame_end - frame_start)
+	;		= FRAME_TIME + frame_start - frame_end
+	mov rax, FRAME_TIME_NS
+	add rax, [frame_start]
+	sub rax, [frame_end]
+	cmp rax, 0
+	jle no_sleep
+	push rax
+	call Sleep
+	CLEAR_STACK_PARAMS 1
+
+no_sleep:
+    jmp game_loop
+
+exit_program:
+    call GCloseDisplay
+    push 0
+    call exit
+	ret ; unreachable code
+
+; ------------------------- methods
+HandleEvent:
+	CALL_AND_ALLOCATE_STACK GCheckKeyPress
 	cmp rax, 0 ; check if rax is not zero- a key was pressed
-	jne key_pressed
-	jmp after_events ; Shouldn't happen- an event was raised
+	jne .key_pressed
+	ret	; no key was pressed
 
-key_pressed:
+.key_pressed:
 	cmp rax, XK_Escape
-	jne after_esc
+	jne .after_esc
 	; key is esc
-	jmp exit_program
+	call exit_program
 
-after_esc:
+.after_esc:
 	; ---- handle user input
 	HandlePlayerInput 1
 	HandlePlayerInput 2
+	ret
+; =====
 
-	; ---- end event handling
-after_events:
+UpdateGameLogic:
 	; clamp player positions
 	push qword [Player_1_Y]
 	call ClampPlayer
@@ -121,26 +178,24 @@ after_events:
 	call ClampPlayer
 	CLEAR_STACK_PARAMS 1
 	mov [Player_2_Y], rax
-	; check should clear screen(hide player trail)
-	call ShouldRedrawScreen
-	test rax, rax
-	jz draw
-	ClearScreen
-draw:
-	DrawPlayer PLAYER_1_X, [Player_1_Y], PLAYER_WIDTH, PLAYER_HEIGHT
-	DrawPlayer PLAYER_2_X, [Player_2_Y], PLAYER_WIDTH, PLAYER_HEIGHT
-	DrawCircle [Ball_X], [Ball_Y], BALL_DIAMETER
-end_game_loop:
-	MOV_DATA [Player_1_Y_OLD], [Player_1_Y]
-	MOV_DATA [Player_2_Y_OLD], [Player_2_Y]
-    jmp game_loop
 
-exit_program:
-    call GCloseDisplay
-    push 0
-    call exit
+	; move ball
 
-; ------------------------- methods
+	add qword [Ball_X], BALL_STEP_SIZE
+
+	ret
+
+Sleep:
+	GET_STACK_PARAM rdi, 1
+    call usleep
+	ret
+
+GetCurrentTime:
+	GET_STACK_PARAM rbx, 1
+	call clock
+	mov [rbx], rax
+    ret
+
 
 ClampPlayer:
 	GET_STACK_PARAM rbx, 1
@@ -159,19 +214,4 @@ ClampPlayer:
 	mov rax, 0								; return the top of the screen
 	jmp .exit_clamp
 .exit_clamp:
-	ret
-
-
-ShouldRedrawScreen:
-	xor rax, rax ; rax = 0
-	CMP_DATA [Player_1_Y_OLD], [Player_1_Y]
-	jne .should_redraw
-	CMP_DATA [Player_2_Y_OLD], [Player_2_Y]
-	jne .should_redraw
-	jmp .exit_redraw_check
-
-.should_redraw:
-	mov rax, 1
-	jmp .exit_redraw_check
-.exit_redraw_check:
 	ret
