@@ -1,6 +1,7 @@
 %include "asm/utils.asm"
 %include "asm/graphics.asm"
 %include "asm/graphics_utils.asm"
+%include "asm/bitmaps.inc"
 %include "asm/XK_keycodes.asm"
 ; --- constants
 
@@ -109,6 +110,10 @@ main:
 	PUSH_ADDRESS window_title
 	call GSetTitle
 	CLEAR_STACK_PARAMS 1
+
+	call InitializeBitmaps
+
+	DrawDigit 2, 0, 0, 50
 
 	;Infinite Game loop
 game_loop:
