@@ -104,6 +104,7 @@ section .bss
 section .text
 
 %macro DrawDigit 4
+    SetColor COLOR_TEAL
     push %1
     push %2
     push %3
@@ -137,11 +138,7 @@ GDrawDigit:
     mov r13, [rsi] ; current byte
 .inner_loop:
     shr r13, 1
-    jc .color
-    SetColor COLOR_BLACK
-    jmp .draw_rectangle
-.color:
-    SetColor COLOR_WHITE ; this is the drawing color
+    jnc .after_draw ; skip current pixel if no need to draw
 .draw_rectangle:
     ; Rectangle(x + pixel_size * bit_counter, x + pixel_size * byte_counter, pixel_size, pixel_size)
     MY_PUSHA
