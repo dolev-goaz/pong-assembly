@@ -49,7 +49,7 @@ extern XCreateSimpleWindow, XWhitePixel
 extern XMapWindow, XSelectInput, XCreateGC, XDefaultColormap
 extern XDrawRectangle, XFillRectangle, XCheckWindowEvent, XCloseDisplay
 extern XkbKeycodeToKeysym, XStoreName, XAllocNamedColor, XSetForeground
-extern XDrawLine, XFillArc, XFlush
+extern XDrawLine, XDrawArc, XFillArc, XFlush
 
 ; ---------------------- METHODS -------------------
 ;---------------------------------------------------
@@ -237,6 +237,7 @@ GSetForegroundColor:
 	mov	rsi, [gc_white]
 	mov	rdx, [xcolors + eax]	; offsetof(XColor, pixel) == 0
 	CALL_AND_ALLOCATE_STACK XSetForeground
+	ret
 
 
 ;---------------------------------------------------
@@ -302,6 +303,28 @@ GDrawCircle:
 	push r9			; height
 
 	call XFillArc
+	CLEAR_STACK_PARAMS 3
+	ret
+
+;---------------------------------------------------
+; Draw Circle Border
+; ------------------
+; Draws a circle
+; Receives-	x, y, radius (STACK)
+;---------------------------------------------------
+GDrawCircleBorder:
+	; void XDrawCircle(display, win, gc, x, y, radius, radius, 0, 360*64)
+	mov rdi, [display]
+	mov rsi, [win]
+	mov rdx, [gc_white]
+	GET_STACK_PARAM rcx, 3	; x
+	GET_STACK_PARAM r8, 2	; y
+	GET_STACK_PARAM r9, 1	; width
+	push 360 * 64	; end angle
+	push 0			; start angle
+	push r9			; height
+
+	call XDrawArc
 	CLEAR_STACK_PARAMS 3
 	ret
 

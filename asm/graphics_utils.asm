@@ -15,14 +15,21 @@ COLOR_TEAL              equ 4
 
 ; Draw a circle
 %macro DrawCircle 3
-    SetColor COLOR_TEAL
     push qword %1
     push qword %2
     push qword %3
     call GDrawCircle
 	CLEAR_STACK_PARAMS 3
-
 %endmacro
+; Draw circle border
+%macro DrawCircleBorder 3
+    push qword %1
+    push qword %2
+    push qword %3
+    call GDrawCircleBorder
+	CLEAR_STACK_PARAMS 3
+%endmacro
+
 ; Draw rectangle border
 %macro DrawRectangleBorder 4
     push qword %1
@@ -75,5 +82,9 @@ COLOR_TEAL              equ 4
     mov rbx, %2
     inc rbx
     DrawRectangleFill %1+1, rbx, %3-2, %4-2
+%endmacro
+%macro DrawBall 3
+    SetColor COLOR_TEAL
+    DrawCircle %1, %2, %3,
 %endmacro
 %endif
