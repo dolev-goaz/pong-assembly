@@ -234,8 +234,8 @@ GDrawNumber:
     jz .input_zero
     mov rbx, 10             ; base 10
 	xor rcx, rcx			; digit counter
-	xor rdx, rdx			; clear rdx
 .count_next_digit:
+	xor rdx, rdx			; clear rdx for div
     inc rcx
     div rbx
 
