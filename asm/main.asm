@@ -136,10 +136,22 @@ game_logic:
 	
 draw:
 	ClearScreen
+
+	push qword [Player_1_Score]
+	call GetDigitCount	; res in rax
+	CLEAR_STACK_PARAMS 1
+
+	mov rbx, SCORE_BITMAP_SIZE
+	xor rdx, rdx
+	mul rbx	; rax is now the negative offset for the first player's score
+	mov rbx, DISPLAY_CENTER_X - SCORE_CENTER_OFFSET
+	sub rbx, rax	; rbx = DISPLAY_CENTER_X - SCORE_CENTER_OFFSET - digits * SCORE_BITMAP_SIZE
+
+	DrawNumber [Player_1_Score], rbx, SCORE_TOP_OFFSET, SCORE_BITMAP_SIZE
+	DrawNumber [Player_2_Score], DISPLAY_CENTER_X + SCORE_CENTER_OFFSET, SCORE_TOP_OFFSET, SCORE_BITMAP_SIZE
+
 	DrawPlayer PLAYER_1_X, [Player_1_Y], PLAYER_WIDTH, PLAYER_HEIGHT
 	DrawPlayer PLAYER_2_X, [Player_2_Y], PLAYER_WIDTH, PLAYER_HEIGHT
-	DrawNumber [Player_1_Score], DISPLAY_CENTER_X - SCORE_CENTER_OFFSET - SCORE_BITMAP_SIZE, SCORE_TOP_OFFSET, SCORE_BITMAP_SIZE
-	DrawNumber [Player_2_Score], DISPLAY_CENTER_X + SCORE_CENTER_OFFSET, SCORE_TOP_OFFSET, SCORE_BITMAP_SIZE
 	DrawBall [Ball_X], [Ball_Y], BALL_DIAMETER
 
 time_sync:
