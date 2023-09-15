@@ -8,8 +8,8 @@
 PIXEL_PER_DIGIT equ 8
 
 section .data
-    digit_0 db 0b00000000,
-			db 0b00111100,
+    digit_0 db 0b00111100,
+			db 0b01100110,
 			db 0b01100110,
 			db 0b01100110,
 			db 0b01100110,
