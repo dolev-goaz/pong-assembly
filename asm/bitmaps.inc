@@ -139,7 +139,6 @@ GDrawDigit:
     GET_STACK_PARAM rdi, 4 ; digit to draw
 
     ; TODO: get bitmap by index
-    ; TODO: bitmaps are flipped horizontally
 
     ; mov rax, WORD_SIZE
     ; mul rdi ; now rax contains the offset for the current digit bitmap
@@ -147,7 +146,7 @@ GDrawDigit:
     ; ; get current digit bitmap
     ; mov rsi, digit_bitmap
     ; add rsi, rax ; rsi contains the address to the bitmap
-    lea rsi, digit_0
+    lea rsi, digit_1
 
     ; get pixel size
     GET_STACK_PARAM rax, 1 ; size(width and height)
@@ -179,11 +178,14 @@ GDrawDigit:
     ; Rectangle(x + pixel_size * bit_counter, x + pixel_size * byte_counter, pixel_size, pixel_size)
     MY_PUSHA
 
-    push rcx
-    push rbx
-    push r14
-    push r15
-    push rax
+    mov r10, PIXEL_PER_DIGIT - 1 ; indexes start at 0
+    sub r10, r14 ; x indexes are inverted
+
+    push rcx    ; start x
+    push rbx    ; start y
+    push r10    ; index x
+    push r15    ; index y
+    push rax    ; size
     call GBitmapDrawPixel
     CLEAR_STACK_PARAMS 5
 
