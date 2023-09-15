@@ -135,24 +135,7 @@ game_logic:
 	call UpdateGameLogic
 	
 draw:
-	ClearScreen
-
-	push qword [Player_1_Score]
-	call GetDigitCount	; res in rax
-	CLEAR_STACK_PARAMS 1
-
-	mov rbx, SCORE_BITMAP_SIZE
-	xor rdx, rdx
-	mul rbx	; rax is now the negative offset for the first player's score
-	mov rbx, DISPLAY_CENTER_X - SCORE_CENTER_OFFSET
-	sub rbx, rax	; rbx = DISPLAY_CENTER_X - SCORE_CENTER_OFFSET - digits * SCORE_BITMAP_SIZE
-
-	DrawNumber [Player_1_Score], rbx, SCORE_TOP_OFFSET, SCORE_BITMAP_SIZE
-	DrawNumber [Player_2_Score], DISPLAY_CENTER_X + SCORE_CENTER_OFFSET, SCORE_TOP_OFFSET, SCORE_BITMAP_SIZE
-
-	DrawPlayer PLAYER_1_X, [Player_1_Y], PLAYER_WIDTH, PLAYER_HEIGHT
-	DrawPlayer PLAYER_2_X, [Player_2_Y], PLAYER_WIDTH, PLAYER_HEIGHT
-	DrawBall [Ball_X], [Ball_Y], BALL_DIAMETER
+	call DrawScreen
 
 time_sync:
 ; Time handling
@@ -393,4 +376,34 @@ ClampPlayer:
 	mov rax, 0								; return the top of the screen
 	jmp .exit_clamp
 .exit_clamp:
+	ret
+
+DrawScreen:
+	ClearScreen
+
+	call DrawScore
+	DrawPlayer PLAYER_1_X, [Player_1_Y], PLAYER_WIDTH, PLAYER_HEIGHT
+	DrawPlayer PLAYER_2_X, [Player_2_Y], PLAYER_WIDTH, PLAYER_HEIGHT
+	DrawBall [Ball_X], [Ball_Y], BALL_DIAMETER
+
+	ret
+
+DrawScore:
+
+	; calculate the correct offset for player 1's score(is aligned by its end)
+	; demonstration for the offset when score goes from 9 to 10-
+	; __9_| => _10_| (notice the underlines before the number)
+	push qword [Player_1_Score]
+	call GetDigitCount	; res in rax
+	CLEAR_STACK_PARAMS 1
+
+	mov rbx, SCORE_BITMAP_SIZE
+	xor rdx, rdx
+	mul rbx	; rax is now the negative offset for the first player's score
+	mov rbx, DISPLAY_CENTER_X - SCORE_CENTER_OFFSET
+	sub rbx, rax	; rbx = DISPLAY_CENTER_X - SCORE_CENTER_OFFSET - digits * SCORE_BITMAP_SIZE
+	; rbx holds the correct offset
+
+	DrawNumber [Player_1_Score], rbx, SCORE_TOP_OFFSET, SCORE_BITMAP_SIZE
+	DrawNumber [Player_2_Score], DISPLAY_CENTER_X + SCORE_CENTER_OFFSET, SCORE_TOP_OFFSET, SCORE_BITMAP_SIZE
 	ret
