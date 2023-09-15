@@ -251,14 +251,15 @@ GDrawNumber:
 .draw_next_digit:
     ; Get digit position
     GET_STACK_PARAM rax, 1  ; digit size
+    dec rcx					; offset should start at 0 instead of at 1
     mul rcx                 ; rax contains digit x offset
+    inc rcx
 
     GET_STACK_PARAM r14, 3  ; number x position
     add r14, rax            ; digit x position
 
 
 	mov rax, r15			; number to draw
-    ; Get current digit(cur_digit, digit_index), digit_index starts at 1
     div rbx                 ; rdx contains current digit
 	mov r15, rax			; r15 contains remaining number
 
