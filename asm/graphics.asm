@@ -237,6 +237,7 @@ GSetForegroundColor:
 	mov	rsi, [gc_white]
 	mov	rdx, [xcolors + eax]	; offsetof(XColor, pixel) == 0
 	CALL_AND_ALLOCATE_STACK XSetForeground
+	ret
 
 
 ;---------------------------------------------------
