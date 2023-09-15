@@ -230,23 +230,12 @@ GDrawNumber:
     ; Get Digit count(digit_count)
 
     GET_STACK_PARAM rax, 4  ; number to draw
-    test rax, rax
-    jz .input_zero
-    mov rbx, 10             ; base 10
-	xor rcx, rcx			; digit counter
-.count_next_digit:
-	xor rdx, rdx			; clear rdx for div
-    inc rcx
-    div rbx
-
-    test rax, rax
-    jnz .count_next_digit
-	jmp .prepare_draw
-.input_zero:
-	mov rcx, 1
+	push rax
+	call GetDigitCount		; result is in rax
+	CLEAR_STACK_PARAMS 1
+	mov rcx, rax			; digit counter
 
     ; LOOP AT DIGITS:
-.prepare_draw:
 	GET_STACK_PARAM r15, 4	; number to draw
 .draw_next_digit:
     ; Get digit position

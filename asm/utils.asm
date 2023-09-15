@@ -82,4 +82,26 @@ exit:
     mov rax, 60
     GET_STACK_PARAM rdi, 1 ; status code
     syscall
+
+;-----------------------------------------
+; Get Digit Count
+; ---------------
+; Receives- the number(STACK)
+; Returns- the digit count(RAX)
+;-----------------------------------------
+GetDigitCount:
+    GET_STACK_PARAM rax, 1  ; number to draw
+	xor rcx, rcx            ; digit counter
+    mov rbx, 10             ; base 10
+.count_next_digit:
+	xor rdx, rdx			; clear rdx for div
+    inc rcx
+    div rbx
+
+    test rax, rax
+    jnz .count_next_digit
+
+    mov rax, rcx            ; output register
+    ret
+
 %endif
