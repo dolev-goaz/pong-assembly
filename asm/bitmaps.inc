@@ -1,3 +1,6 @@
+%ifndef BITMAPS_INCLUDED
+%define BITMAPS_INCLUDED
+
 %include "asm/utils.asm"
 %include "asm/graphics.asm"
 %include "asm/graphics_utils.asm"
@@ -205,4 +208,71 @@ GBitmapDrawPixel:
     DrawRectangleFill r10, r11, rax, rax
 
     ret
-string_utils
+
+%macro DrawNumber 4
+    push qword %1
+    push %2
+    push %3
+    push %4
+    call GDrawNumber
+    CLEAR_STACK_PARAMS 4
+%endmacro
+
+
+;-------------------------------------------------------------
+; Draw Number
+; -----------
+; Draws a number on the screen
+; ------------------------------------------------------------
+; Receives- number, positionX, positionY, digitSize(STACK)
+;-------------------------------------------------------------
+GDrawNumber:
+    ; Get Digit count(digit_count)
+
+    GET_STACK_PARAM rax, 4  ; number to draw
+    test rax, rax
+    jz .input_zero
+    mov rbx, 10             ; base 10
+	xor rcx, rcx			; digit counter
+	xor rdx, rdx			; clear rdx
+.count_next_digit:
+    inc rcx
+    div rbx
+
+    test rax, rax
+    jnz .count_next_digit
+	jmp .prepare_draw
+.input_zero:
+	mov rcx, 1
+
+    ; LOOP AT DIGITS:
+.prepare_draw:
+	GET_STACK_PARAM r15, 4	; number to draw
+.draw_next_digit:
+    ; Get digit position
+    GET_STACK_PARAM rax, 1  ; digit size
+    mul rcx                 ; rax contains digit x offset
+
+    GET_STACK_PARAM r14, 3  ; number x position
+    add r14, rax            ; digit x position
+
+
+	mov rax, r15			; number to draw
+    ; Get current digit(cur_digit, digit_index), digit_index starts at 1
+    div rbx                 ; rdx contains current digit
+	mov r15, rax			; r15 contains remaining number
+
+    GET_STACK_PARAM r13, 2  ; number/digit y position
+    GET_STACK_PARAM r12, 1  ; digit size
+
+.debug_before_draw: ; CHECK: rdx, r15, r14, r13, rax, rdx
+	MY_PUSHA
+    DrawDigit rdx, r14, r13, r12
+	MY_POPA
+.debug_after_draw:
+    dec rcx
+    test rcx, rcx
+    jnz .draw_next_digit
+    ; draw current digit((positionX + digitSize * (digit_count - digit_index), positionY))
+    ret
+%endif
