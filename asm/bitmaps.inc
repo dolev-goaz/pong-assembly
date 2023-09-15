@@ -111,6 +111,14 @@ section .text
     CLEAR_STACK_PARAMS 4
 %endmacro
 
+
+;-------------------------------------------------------------
+; Draw Digit
+; ----------
+; Draws a digit on the screen
+; ------------------------------------------------------------
+; Receives- digit(0-9), positionX, positionY, drawSize(STACK)
+;-------------------------------------------------------------
 GDrawDigit:
     GET_STACK_PARAM rdi, 4 ; digit to draw
     mov rsi, [digit_bitmap + WORD_SIZE * rdi] ; rsi contains the address to the bitmap
@@ -168,7 +176,13 @@ GDrawDigit:
 
 
 
-; startX, startY, currentIndexX, currentIndexY, pixelSize
+;-------------------------------------------------------------
+; Bitmap Draw Pixel
+; -----------------
+; Draws a pixel of a bitmap
+; ------------------------------------------------------------
+; Receives- bitmapX, bitmapY, indexX, indexY, pixelSize(STACK)
+;-------------------------------------------------------------
 GBitmapDrawPixel:
     ; get the offset
     GET_STACK_PARAM rax, 1  ; pixel size
