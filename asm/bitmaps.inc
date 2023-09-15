@@ -137,17 +137,22 @@ InitializeBitmaps:
 
 GDrawDigit:
     GET_STACK_PARAM rdi, 4 ; digit to draw
-    mov rax, WORD_SIZE
-    mul rdi ; now rax contains the offset for the current digit bitmap
 
-    ; get current digit bitmap
-    mov rsi, digit_bitmap
-    add rsi, rax ; rsi contains the address to the bitmap
+    ; TODO: get bitmap by index
+    ; TODO: bitmaps are flipped horizontally
 
+    ; mov rax, WORD_SIZE
+    ; mul rdi ; now rax contains the offset for the current digit bitmap
+
+    ; ; get current digit bitmap
+    ; mov rsi, digit_bitmap
+    ; add rsi, rax ; rsi contains the address to the bitmap
+    lea rsi, digit_0
 
     ; get pixel size
     GET_STACK_PARAM rax, 1 ; size(width and height)
     mov rcx, PIXEL_PER_DIGIT
+    xor rdx, rdx
     div rcx                 ; now rax is pixel size
 
     ; get coordinates
@@ -157,14 +162,14 @@ GDrawDigit:
 
     ; draw rectangle for each pixel
 
-    mov rdx, PIXEL_PER_DIGIT ; byte counter (Y)
+    mov r15, 0 ; byte counter (Y)
 
 .draw_loop: ; loops over every byte
 
-    mov r8, [rsi] ; current byte
-    mov r9, PIXEL_PER_DIGIT ; bit counter (X)
+    mov r14, 0 ; bit counter (X)
+    mov r13, [rsi] ; current byte
 .inner_loop:
-    shr r8, 1
+    shr r13, 1
     jc .color
     SetColor COLOR_BLACK
     jmp .draw_rectangle
@@ -176,30 +181,49 @@ GDrawDigit:
 
     push rcx
     push rbx
-    push r9
-    push r8
+    push r14
+    push r15
     push rax
-    call BitmapDrawPixel
+    call GBitmapDrawPixel
     CLEAR_STACK_PARAMS 5
 
     MY_POPA
 
-    PUSH_ADDRESS msg
-    call write_string
-    CLEAR_STACK_PARAMS 1
-
-    dec r9
-    jnz .inner_loop
+.after_draw:
+    inc r14 ; next x index
+    cmp r14, PIXEL_PER_DIGIT
+    jl .inner_loop
 
     inc rsi ; go to next byte
-    dec rdx
-    jnz .draw_loop
+    inc r15 ; next y index
+    cmp r15, PIXEL_PER_DIGIT
+    jl .draw_loop
     
     ret
 
 
 
 ; startX, startY, currentIndexX, currentIndexY, pixelSize
-; indexes are from ent to start(8 to 0)
-BitmapDrawPixel:
+GBitmapDrawPixel:
+    ; get the offset
+    GET_STACK_PARAM rax, 1  ; pixel size
+    GET_STACK_PARAM rcx, 3  ; x index
+    mul rcx                 ; rax is now offset x
+
+    GET_STACK_PARAM r10, 5  ; start X
+    add r10, rax            ; r10 is rect X
+
+
+    GET_STACK_PARAM rax, 1  ; pixel size
+    GET_STACK_PARAM rcx, 2  ; y index
+    mul rcx                 ; rax is not offset y
+
+    GET_STACK_PARAM r11, 4  ; start Y
+    add r11, rax            ; r11 is rect Y
+
+    GET_STACK_PARAM rax, 1  ; pixel size
+
+    DrawRectangleFill r10, r11, rax, rax
+
     ret
+string_utils

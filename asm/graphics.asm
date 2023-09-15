@@ -229,14 +229,18 @@ GInitializeColors:
 ;---------------------------------------------------
 GSetForegroundColor:
 	; void XSetForeground(display, gc_draw, XColor.pixel)
-	mov	eax, 16 ; size of color
 	GET_STACK_PARAM r11, 1
+
+	MY_PUSHA
+	mov	eax, 16 ; size of color
 	mul	r11d	; offset from start of colors
 
 	mov	rdi, [display]
 	mov	rsi, [gc_white]
 	mov	rdx, [xcolors + eax]	; offsetof(XColor, pixel) == 0
 	CALL_AND_ALLOCATE_STACK XSetForeground
+
+	MY_POPA
 	ret
 
 
