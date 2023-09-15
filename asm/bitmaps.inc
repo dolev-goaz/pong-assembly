@@ -1,7 +1,6 @@
 %include "asm/utils.asm"
 %include "asm/graphics.asm"
 %include "asm/graphics_utils.asm"
-%include "asm/string_utils.asm"
 
 PIXEL_PER_DIGIT equ 8
 
@@ -99,32 +98,10 @@ section .data
                 db 0b00011000,
                 db 0b00111100
     
-    msg db "Hello ", 0
+    digit_bitmap dq digit_0, digit_1, digit_2, digit_3, digit_4, digit_5, digit_6, digit_7, digit_8, digit_9 
 
 section .bss
-digit_test      resq 10 ; idk why i have to define this so the color won't overflow
-digit_bitmap    resq 10
-
 section .text
-
-%macro InitializeDigit 1
-    mov qword [digit_bitmap + %1 * WORD_SIZE], digit_%1
-%endmacro
-
-; =====
-InitializeBitmaps:
-    InitializeDigit 0
-    InitializeDigit 1
-    InitializeDigit 2
-    InitializeDigit 3
-    InitializeDigit 4
-    InitializeDigit 5
-    InitializeDigit 6
-    InitializeDigit 7
-    InitializeDigit 8
-    InitializeDigit 9
-    ret
-; =====
 
 %macro DrawDigit 4
     push %1
@@ -137,16 +114,7 @@ InitializeBitmaps:
 
 GDrawDigit:
     GET_STACK_PARAM rdi, 4 ; digit to draw
-
-    ; TODO: get bitmap by index
-
-    ; mov rax, WORD_SIZE
-    ; mul rdi ; now rax contains the offset for the current digit bitmap
-
-    ; ; get current digit bitmap
-    ; mov rsi, digit_bitmap
-    ; add rsi, rax ; rsi contains the address to the bitmap
-    lea rsi, digit_1
+    mov rsi, [digit_bitmap + WORD_SIZE * rdi] ; rsi contains the address to the bitmap
 
     ; get pixel size
     GET_STACK_PARAM rax, 1 ; size(width and height)

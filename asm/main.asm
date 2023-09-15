@@ -111,8 +111,6 @@ main:
 	call GSetTitle
 	CLEAR_STACK_PARAMS 1
 
-	call InitializeBitmaps
-
 	;Infinite Game loop
 game_loop:
 
@@ -136,7 +134,7 @@ draw:
 	ClearScreen
 	DrawPlayer PLAYER_1_X, [Player_1_Y], PLAYER_WIDTH, PLAYER_HEIGHT
 	DrawPlayer PLAYER_2_X, [Player_2_Y], PLAYER_WIDTH, PLAYER_HEIGHT
-	DrawDigit 0, 200, 20, 100
+	DrawDigit 2, 200, 20, 100
 	DrawBall [Ball_X], [Ball_Y], BALL_DIAMETER
 
 time_sync:
