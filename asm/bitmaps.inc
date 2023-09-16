@@ -126,15 +126,49 @@ GDrawDigit:
     GET_STACK_PARAM rdi, 4 ; digit to draw
     mov rsi, [digit_bitmap + WORD_SIZE * rdi] ; rsi contains the address to the bitmap
 
+    GET_STACK_PARAM rax, 3	; rax contains bitmap x
+    GET_STACK_PARAM rbx, 2	; rbx contains bitmap y
+    GET_STACK_PARAM rcx, 1	; rcx contains bitmap size
+
+    push rsi					; bitmap address
+    push rax					; bitmap x
+    push rbx					; bitmap y
+
+    push qword PIXEL_PER_DIGIT	; bitmap height(constant for numbers)
+
+    ; pixel_size = draw_size/pixel_count = rcx / PIXEL_PER_DIGIT
+    mov rbx, PIXEL_PER_DIGIT
+    mov rax, rcx
+    div rbx						; rax holds pixel size
+    push rax					; pixel size
+
+    call GDrawBitmap
+    CLEAR_STACK_PARAMS 5
+
+    ret
+
+;----------------------------------------------------------------------
+; Draw Bitmap
+; -----------
+; Draws a bitmap
+;----------------------------------------------------------------------
+; Assumes-	width is 8, bitmap is stored in bytes
+; ASsumes-	each byte is one row, each column is one bit
+;----------------------------------------------------------------------
+; Receives- bitmapAddress, bitmapX, bitmapY, pxHeight, pixelSize(STACK)
+;----------------------------------------------------------------------
+GDrawBitmap:
+
+    GET_STACK_PARAM rsi, 5	; rsi is bitmap address
+
     ; get pixel size
-    GET_STACK_PARAM rax, 1 ; size(width and height)
-    mov rcx, PIXEL_PER_DIGIT
-    xor rdx, rdx
-    div rcx                 ; now rax is pixel size
+    GET_STACK_PARAM rax, 1	; rax is pixel size
 
     ; get coordinates
-    GET_STACK_PARAM rcx, 3 ; x coordinate
-    GET_STACK_PARAM rbx, 2 ; y coordinate
+    GET_STACK_PARAM rcx, 4	; rcx is x coordinate
+    GET_STACK_PARAM rbx, 3	; rbx is y coordinate
+
+    GET_STACK_PARAM r9, 2	; r9 is bitmap height
 
 
     ; draw rectangle for each pixel
@@ -152,7 +186,7 @@ GDrawDigit:
     ; Rectangle(x + pixel_size * bit_counter, x + pixel_size * byte_counter, pixel_size, pixel_size)
     MY_PUSHA
 
-    mov r10, PIXEL_PER_DIGIT - 1 ; indexes start at 0
+    mov r10, 8 - 1 ; indexes start at 0, byte is 8 bits
     sub r10, r14 ; x indexes are inverted
 
     push rcx    ; start x
@@ -166,18 +200,16 @@ GDrawDigit:
     MY_POPA
 
 .after_draw:
-    inc r14 ; next x index
-    cmp r14, PIXEL_PER_DIGIT
+    inc r14     ; next x index
+    cmp r14, 8  ; finished passing through the byte?
     jl .inner_loop
 
-    inc rsi ; go to next byte
-    inc r15 ; next y index
-    cmp r15, PIXEL_PER_DIGIT
+    inc rsi     ; go to next byte
+    inc r15     ; next y index
+    cmp r15, r9 ; finished the bitmap
     jl .draw_loop
     
     ret
-
-
 
 ;-------------------------------------------------------------
 ; Bitmap Draw Pixel
@@ -211,9 +243,9 @@ GBitmapDrawPixel:
 
 %macro DrawNumber 4
     push qword %1
-    push %2
-    push %3
-    push %4
+    push qword %2
+    push qword %3
+    push qword %4
     call GDrawNumber
     CLEAR_STACK_PARAMS 4
 %endmacro
@@ -255,11 +287,10 @@ GDrawNumber:
     GET_STACK_PARAM r13, 2  ; number/digit y position
     GET_STACK_PARAM r12, 1  ; digit size
 
-.debug_before_draw: ; CHECK: rdx, r15, r14, r13, rax, rdx
 	MY_PUSHA
     DrawDigit rdx, r14, r13, r12
 	MY_POPA
-.debug_after_draw:
+
     dec rcx
     test rcx, rcx
     jnz .draw_next_digit
