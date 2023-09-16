@@ -71,7 +71,7 @@ COLOR_TEAL              equ 4
 
     ; field seperator
     SetColor COLOR_WHITE
-    DrawLine DISPLAY_WIDTH / 2, 0, DISPLAY_WIDTH / 2, DISPLAY_HEIGHT
+    DrawLine DISPLAY_CENTER_X, 0, DISPLAY_CENTER_X, DISPLAY_HEIGHT
 %endmacro
 ; Draw player
 %macro DrawPlayer 4

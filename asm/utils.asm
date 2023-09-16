@@ -35,6 +35,43 @@ section .text
     cmp rbx, %2
 %endmacro
 
+; Macro to push all general-purpose registers onto the stack
+%macro MY_PUSHA 0
+    push r15
+    push r14
+    push r13
+    push r12
+    push r11
+    push r10
+    push r9
+    push r8
+    push rdi
+    push rsi
+    push rdx
+    push rcx
+    push rbx
+    push rax
+%endmacro
+
+; Macro to pop all general-purpose registers from the stack
+%macro MY_POPA 0
+    pop rax
+    pop rbx
+    pop rcx
+    pop rdx
+    pop rsi
+    pop rdi
+    pop r8
+    pop r9
+    pop r10
+    pop r11
+    pop r12
+    pop r13
+    pop r14
+    pop r15
+%endmacro
+
+
 ; ------------------------------------------------ METHODS --------------------------------------------
 ;-----------------------------------------
 ; EXIT
@@ -45,4 +82,26 @@ exit:
     mov rax, 60
     GET_STACK_PARAM rdi, 1 ; status code
     syscall
+
+;-----------------------------------------
+; Get Digit Count
+; ---------------
+; Receives- the number(STACK)
+; Returns- the digit count(RAX)
+;-----------------------------------------
+GetDigitCount:
+    GET_STACK_PARAM rax, 1  ; number to draw
+	xor rcx, rcx            ; digit counter
+    mov rbx, 10             ; base 10
+.count_next_digit:
+	xor rdx, rdx			; clear rdx for div
+    inc rcx
+    div rbx
+
+    test rax, rax
+    jnz .count_next_digit
+
+    mov rax, rcx            ; output register
+    ret
+
 %endif
