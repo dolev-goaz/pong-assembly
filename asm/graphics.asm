@@ -140,20 +140,19 @@ GCreateWindow:
 	; Window XCreateSimpleWindow(display, r_win, 0, 0, width, height)
 	mov rdi, [display]		; display
 	mov rsi, [r_win]		; window
-	mov rdx, 0				; window position x (doesn't work?)
-	mov rcx, 0				; window position y (doesn't work?)
+	mov rdx, 0				; window position x (not honored- main window is a child of OS)
+	mov rcx, 0				; window position y (not honored- main window is a child of OS)
 	GET_STACK_PARAM r8, 2 	; window width
 	GET_STACK_PARAM r9, 1 	; window height
 
-	mov r10, 2				; border width (doesn't work?)
-	mov r11, 0xFFFFFF		; border color (doesn't work?)
-	mov r12, 0xFFFFFF		; background color (doesn't work?)
+	; rest of parameters need to be pushed in reverse
+	push qword 0xFFFFFF		; window background color	(honored)
+	push qword 0xFF0000		; window border color		(not honored- idk why)
+	push qword 5			; window border size		(not honored- idk why)
 
-
-	push 0x000000			; background-color
 	mov rax, 0				; clear return value
-	CALL_AND_ALLOCATE_STACK_COUNT XCreateSimpleWindow, 2
-	CLEAR_STACK_PARAMS 1
+	call XCreateSimpleWindow
+	CLEAR_STACK_PARAMS 3
 
     mov	[win], rax
 	ret
