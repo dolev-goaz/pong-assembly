@@ -59,10 +59,10 @@ extern XDrawLine, XDrawArc, XFillArc, XFlush
 ;---------------------------------------------------
 GInitializeDisplay:
 
-	CALL_AND_ALLOCATE_STACK GOpenDisplay
-	CALL_AND_ALLOCATE_STACK GDefaultScreen
-	CALL_AND_ALLOCATE_STACK GPixels
-	CALL_AND_ALLOCATE_STACK GRootWindow
+	call GOpenDisplay
+	call GDefaultScreen
+	call GPixels
+	call GRootWindow
 
 	GET_STACK_PARAM rax, 1
 	GET_STACK_PARAM rbx, 2
@@ -71,11 +71,11 @@ GInitializeDisplay:
 	call GCreateWindow
 	CLEAR_STACK_PARAMS 2
 
-	CALL_AND_ALLOCATE_STACK GCreateGraphicsContext
-	CALL_AND_ALLOCATE_STACK GDefaultColorMap
-	CALL_AND_ALLOCATE_STACK GInitializeColors
-	CALL_AND_ALLOCATE_STACK GSelectInput
-	CALL_AND_ALLOCATE_STACK GMapWindow
+	call GCreateGraphicsContext
+	call GDefaultColorMap
+	call GInitializeColors
+	call GSelectInput
+	call GMapWindow
 
 	ret
 
@@ -88,7 +88,7 @@ GInitializeDisplay:
 GOpenDisplay:
 	; Display* XOpenDisplay(NULL)
 	mov rdi, 0 ; Display name (0 indicates default display)
-	CALL_AND_ALLOCATE_STACK XOpenDisplay
+	call XOpenDisplay
     mov [display], rax
 	ret
 
@@ -113,7 +113,7 @@ GPixels:
 	; int XWhitePixel(display, screen)
 	mov	rdi, [display]
 	mov	rsi, [screen]
-	CALL_AND_ALLOCATE_STACK XWhitePixel
+	call XWhitePixel
 	mov	[white], eax
 	ret
 
@@ -126,7 +126,7 @@ GPixels:
 GRootWindow:
 	; Window XDefaultRootWindow(display)
 	mov	rdi, [display]
-	CALL_AND_ALLOCATE_STACK XDefaultRootWindow
+	call XDefaultRootWindow
 	mov	[r_win], rax
 	ret
 
@@ -170,7 +170,7 @@ GSetTitle:
 	mov rdi, [display]
 	mov rsi, [win]
 	GET_STACK_PARAM rdx, 1
-	CALL_AND_ALLOCATE_STACK XStoreName
+	call XStoreName
 	ret
 
 ;---------------------------------------------------
@@ -188,7 +188,7 @@ GCreateGraphicsContext:
 	mov	rsi, [win]
 	mov	rdx, [gc_foreground]
 	mov	rcx, xgcvals_white
-	CALL_AND_ALLOCATE_STACK XCreateGC
+	call XCreateGC
 	mov	[gc_white], rax
 
 	ret
@@ -203,7 +203,7 @@ GCreateGraphicsContext:
 	mov r8, xcolors
 	add r8, xcolors_struct.temp
 
-	CALL_AND_ALLOCATE_STACK XAllocNamedColor
+	call XAllocNamedColor
 %endmacro
 ;---------------------------------------------------
 ; Initialize colors
@@ -238,7 +238,7 @@ GSetForegroundColor:
 	mov	rdi, [display]
 	mov	rsi, [gc_white]
 	mov	rdx, [xcolors + eax]	; offsetof(XColor, pixel) == 0
-	CALL_AND_ALLOCATE_STACK XSetForeground
+	call XSetForeground
 
 	MY_POPA
 	ret
@@ -256,7 +256,7 @@ GDefaultColorMap:
 	; Colormap XDefaultColormap(display, screen)
 	mov	rdi, [display]
 	mov	esi, [screen]
-	CALL_AND_ALLOCATE_STACK XDefaultColormap
+	call XDefaultColormap
 	mov	[colormap], rax
 	ret
 
@@ -272,7 +272,7 @@ GSelectInput:
 	mov	rsi, [win]
 	mov	rdx, [ExposureMask]
 	or	rdx, [KeyPressMask]
-	CALL_AND_ALLOCATE_STACK XSelectInput
+	call XSelectInput
 	ret
 
 
@@ -285,7 +285,7 @@ GMapWindow:
 	; void XMapWindow(display, win)
 	mov	rdi, [display]
 	mov	rsi, [win]
-	CALL_AND_ALLOCATE_STACK XMapWindow
+	call XMapWindow
 	ret
 
 ;---------------------------------------------------
@@ -403,7 +403,7 @@ GDrawRectangle:
 ;---------------------------------------------------
 GFlush:
 	mov rdi, [display]
-	CALL_AND_ALLOCATE_STACK XFlush
+	call XFlush
 	ret
 
 
@@ -469,7 +469,7 @@ GCheckKeyPress:
 	jne .finished_key_press
 
 	; key was pressed
-	CALL_AND_ALLOCATE_STACK GKeycodeToKeysym
+	call GKeycodeToKeysym
 	; res in rax
 
 .finished_key_press:
@@ -488,7 +488,7 @@ GKeycodeToKeysym:
 	mov esi, [xevent_inner + 84]	; offsetof(Xevent.xkey, keycode) == 84
 	mov rdx, 0						; group
 	mov rcx, 0						; level
-	CALL_AND_ALLOCATE_STACK XkbKeycodeToKeysym
+	call XkbKeycodeToKeysym
 	; res in rax
 	ret
 
@@ -500,7 +500,7 @@ GKeycodeToKeysym:
 GCloseDisplay:
 	; XCloseDisplay(display)
 	mov rdi, [display]
-	CALL_AND_ALLOCATE_STACK XCloseDisplay
+	call XCloseDisplay
 	ret
 
 %endif
