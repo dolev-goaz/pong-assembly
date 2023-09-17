@@ -427,6 +427,7 @@ GCheckWindowEvent:
 	or	rdx, [KeyPressMask]
 	mov rcx, xevent_inner
 
+	; causes segfault without allocating stack, idk why
 	CALL_AND_ALLOCATE_STACK XCheckWindowEvent
 	ret
 
@@ -461,8 +462,7 @@ GCheckExpose:
 ;			otherwise 0 (RAX)
 ;---------------------------------------------------
 GCheckKeyPress:
-	mov rax, 0
-
+	xor rax, rax
 	mov	ecx, [xevent_inner + 0] 	; offsetof(xevent_inner, type) == 0
 	cmp ecx, [EventKeyPress]
 	jne .finished_key_press
@@ -484,10 +484,12 @@ GCheckKeyPress:
 ;---------------------------------------------------
 GKeycodeToKeysym:
 	mov rdi, [display]
-	mov esi, [xevent_inner + 84]	; offsetof(Xevent.xkey, keycode) == 84
+	mov rsi, [xevent_inner + 84]	; offsetof(Xevent.xkey, keycode) == 84
 	mov rdx, 0						; group
 	mov rcx, 0						; level
-	call XkbKeycodeToKeysym
+
+	; causes segfault without allocating stack, idk why
+	CALL_AND_ALLOCATE_STACK XkbKeycodeToKeysym
 	; res in rax
 	ret
 

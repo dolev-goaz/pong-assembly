@@ -168,7 +168,7 @@ end_game_loop:
 ; Handles the game exit and player movement keyboard events
 ;----------------------------------------------------------
 HandleEvent:
-	CALL_AND_ALLOCATE_STACK GCheckKeyPress
+	call GCheckKeyPress
 	cmp rax, 0 ; check if rax is not zero- a key was pressed
 	jne .key_pressed
 	ret	; no key was pressed
