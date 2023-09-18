@@ -1,8 +1,8 @@
 %include "asm/utils.asm"
-%include "asm/graphics.asm"
-%include "asm/graphics_utils.asm"
-%include "asm/bitmaps.inc"
-%include "asm/XK_keycodes.asm"
+%include "asm/x11lib_wrapper.asm"
+%include "asm/graphics_utils.inc"
+%include "asm/bitmaps.asm"
+%include "asm/XK_keycodes.inc"
 ; --- constants
 
 extern	clock, usleep

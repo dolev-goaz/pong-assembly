@@ -2,8 +2,8 @@
 %define BITMAPS_INCLUDED
 
 %include "asm/utils.asm"
-%include "asm/graphics.asm"
-%include "asm/graphics_utils.asm"
+; %include "asm/x11lib_wrapper.asm"
+%include "asm/graphics_utils.inc"
 
 PIXEL_PER_DIGIT equ 8
 

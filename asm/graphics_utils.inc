@@ -1,6 +1,6 @@
 %ifndef GRAPHICS_UTILS_INCLUDED
 %define GRAPHICS_UTILS_INCLUDED
-%include "asm/graphics.asm"
+%include "asm/x11lib_wrapper.asm"
 %include "asm/utils.asm"
 
 section .text
