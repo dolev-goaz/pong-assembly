@@ -9,22 +9,24 @@ PIXEL_PER_DIGIT equ 8
 
 section .data
     digit_0 db 0b00111100,
-			db 0b01100110,
-			db 0b01100110,
-			db 0b01100110,
-			db 0b01100110,
-			db 0b01100110,
-			db 0b00111100,
-			db 0b00000000
+            db 0b01100110,
+            db 0b01100110,
+            db 0b01100110,
+            db 0b01100110,
+            db 0b01100110,
+            db 0b00111100,
+            db 0b00000000,
+
+
 
 	digit_1 db 0b00001000,
-			db 0b00011000,
-			db 0b00111000,
-			db 0b00011000,
-			db 0b00011000,
-			db 0b00011000,
-			db 0b00111100,
-			db 0b00000000
+            db 0b00011000,
+            db 0b00111000,
+            db 0b00011000,
+            db 0b00011000,
+            db 0b00011000,
+            db 0b00111100,
+            db 0b00000000,
 
 	digit_2 db 0b00111100,
 			db 0b01100110,
@@ -134,7 +136,8 @@ GDrawDigit:
     push rax					; bitmap x
     push rbx					; bitmap y
 
-    push qword PIXEL_PER_DIGIT	; bitmap height(constant for numbers)
+    push qword PIXEL_PER_DIGIT  ; bitmap height(constant for numbers)
+    push qword PIXEL_PER_DIGIT  ; bitmap width(constant for numbers)
 
     ; pixel_size = draw_size/pixel_count = rcx / PIXEL_PER_DIGIT
     mov rbx, PIXEL_PER_DIGIT
@@ -144,7 +147,7 @@ GDrawDigit:
     push rax					; pixel size
 
     call GDrawBitmap
-    CLEAR_STACK_PARAMS 5
+    CLEAR_STACK_PARAMS 6
 
     ret
 
@@ -154,63 +157,103 @@ GDrawDigit:
 ; Draws a bitmap
 ;----------------------------------------------------------------------
 ; Assumes-	width is 8, bitmap is stored in bytes
-; ASsumes-	each byte is one row, each column is one bit
+; Assumes-	each byte is one row, each column is one bit
 ;----------------------------------------------------------------------
-; Receives- bitmapAddress, bitmapX, bitmapY, pxH, pixelSize(STACK)
+; Receives- bitmapAddress, bitmapX, bitmapY, pxH, pxW, pixelSize(STACK)
 ;----------------------------------------------------------------------
 GDrawBitmap:
+    GET_STACK_PARAM r8, 2	; r8 is bitmap width
 
-    GET_STACK_PARAM rsi, 5	; rsi is bitmap address
+    push r8
+    push qword 8
+    call RoundUpMultiple
+    CLEAR_STACK_PARAMS 2
+    ; rax contains bit count of each row
+    shr rax, 3  ; rax = rax / 8, holds byte count per row
+
+    GET_STACK_PARAM rsi, 6	; rsi is bitmap address
 
     ; get pixel size
-    GET_STACK_PARAM rax, 1	; rax is pixel size
+    GET_STACK_PARAM rdi, 1	; rdi is pixel size
 
     ; get coordinates
-    GET_STACK_PARAM rcx, 4	; rcx is x coordinate
-    GET_STACK_PARAM rbx, 3	; rbx is y coordinate
+    GET_STACK_PARAM rcx, 5	; rcx is x coordinate
+    GET_STACK_PARAM rbx, 4	; rbx is y coordinate
 
-    GET_STACK_PARAM r9, 2	; r9 is bitmap height
+    GET_STACK_PARAM r9, 3	; r9 is bitmap height
 
 
     ; draw rectangle for each pixel
 
-    mov r15, 0 ; byte counter (Y)
+    mov r11, 0 ; y index
 
-.draw_loop: ; loops over every byte
+.draw_loop:
+    mov r15, 0  ; bits drawn(0-r8)
+    mov r14, 0  ; bit counter(in current byte, 0-8)
+    mov r13, 0   ; byte counter(0-rax)
+    mov r12b, [rsi] ; current byte, need to offset by r13
 
-    mov r14, 0 ; bit counter (X)
-    mov r13, [rsi] ; current byte
-.inner_loop:
-    shr r13, 1
-    jnc .after_draw ; skip current pixel if no need to draw
-.draw_rectangle:
-    ; Rectangle(x + pixel_size * bit_counter, x + pixel_size * byte_counter, pixel_size, pixel_size)
-    MY_PUSHA
+.draw_byte_loop:
+    shl r12b, 1
+    jnc .after_draw_bit
 
-    mov r10, 8 - 1 ; indexes start at 0, byte is 8 bits
-    sub r10, r14 ; x indexes are inverted
+    ; draw here
 
-    push rcx    ; start x
-    push rbx    ; start y
-    push r10    ; index x
-    push r15    ; index y
-    push rax    ; size
-    call GBitmapDrawPixel
-    CLEAR_STACK_PARAMS 5
-
-    MY_POPA
-
-.after_draw:
-    inc r14     ; next x index
-    cmp r14, 8  ; finished passing through the byte?
-    jl .inner_loop
-
-    inc rsi     ; go to next byte
-    inc r15     ; next y index
-    cmp r15, r9 ; finished the bitmap
+.after_draw_bit:
+    inc r15 ; next bit(total offset)
+    cmp r15, r8 ; check if row is finished
+    je .after_draw_row
+    ; row didnt finish
+    inc r14 ; next bit(byte offset)
+    cmp r14, 8 ; check if byte is finished
+    jl .draw_byte_loop
+    ; byte finished
+    mov r14, 0
+    inc r13
+    jmp .draw_loop
+.after_draw_row:
+    inc r11
+    cmp r11, r9 ; check if we finished bitmap
     jl .draw_loop
-    
+
     ret
+
+; .draw_loop: ; loops over every row
+
+;     mov r14, 0 ; bit counter (X)
+;     mov r13, [rsi] ; current byte
+; .inner_loop:
+;     shr r13, 1
+;     jnc .after_draw ; skip current pixel if no need to draw
+; .draw_rectangle:
+;     ; Rectangle(x + pixel_size * bit_counter, x + pixel_size * byte_counter, pixel_size, pixel_size)
+;     MY_PUSHA
+
+;     mov r10, 8 - 1 ; indexes start at 0, byte is 8 bits
+;     sub r10, r14 ; x indexes are inverted
+;     ; mov r10, r14
+
+;     push rcx    ; start x
+;     push rbx    ; start y
+;     push r10    ; index x
+;     push r15    ; index y
+;     push rdi    ; size
+;     call GBitmapDrawPixel
+;     CLEAR_STACK_PARAMS 5
+
+;     MY_POPA
+
+; .after_draw:
+;     inc r14     ; next x index
+;     cmp r14, r8  ; finished passing through the row?
+;     jl .inner_loop
+
+;     add rsi, rax ; go to next row
+;     inc r15      ; next y index
+;     cmp r15, r9  ; finished the bitmap
+;     jl .draw_loop
+    
+;     ret
 
 ;-------------------------------------------------------------
 ; Bitmap Draw Pixel
