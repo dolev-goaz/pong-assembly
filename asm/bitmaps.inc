@@ -139,6 +139,7 @@ GDrawDigit:
     ; pixel_size = draw_size/pixel_count = rcx / PIXEL_PER_DIGIT
     mov rbx, PIXEL_PER_DIGIT
     mov rax, rcx
+    xor rdx, rdx                ; clear before div
     div rbx						; rax holds pixel size
     push rax					; pixel size
 
@@ -281,6 +282,7 @@ GDrawNumber:
 
 
 	mov rax, r15			; number to draw
+    xor rdx, rdx            ; clear rdx before div
     div rbx                 ; rdx contains current digit
 	mov r15, rax			; r15 contains remaining number
 
