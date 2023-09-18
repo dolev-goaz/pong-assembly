@@ -2,8 +2,8 @@
 %define GRAPHICS_INCLUDED
 %include "asm/utils.asm"
 section .data
-ExposureMask:	dq 32768
-KeyPressMask:	dq 1
+ExposureMask:	dq 1 << 15	; 15th bit
+KeyPressMask:	dq 1 << 0	; 1st bit
 gc_foreground:	dq 4
 
 EventKeyPress:	dd 2
