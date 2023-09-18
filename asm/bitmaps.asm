@@ -156,7 +156,7 @@ GDrawDigit:
 ; Assumes-	width is 8, bitmap is stored in bytes
 ; ASsumes-	each byte is one row, each column is one bit
 ;----------------------------------------------------------------------
-; Receives- bitmapAddress, bitmapX, bitmapY, pxHeight, pixelSize(STACK)
+; Receives- bitmapAddress, bitmapX, bitmapY, pxH, pixelSize(STACK)
 ;----------------------------------------------------------------------
 GDrawBitmap:
 
@@ -298,4 +298,33 @@ GDrawNumber:
     jnz .draw_next_digit
     ; draw current digit((positionX + digitSize * (digit_count - digit_index), positionY))
     ret
+
+;-------------------------------------------------------------
+; Round Up Multiple
+; -----------------
+; Rounds the first argument up to the closest multiple above
+; or equal of the second parameter
+; ------------------------------------------------------------
+; Receives- toRound, multiple(STACK)
+; Returns- the rounded multiple(RAX)
+;-------------------------------------------------------------
+RoundUpMultiple:
+    GET_STACK_PARAM rcx, 1  ; the multiple
+    GET_STACK_PARAM rax, 2  ; the number to round
+    mov rbx, rax            ; copy
+    xor rdx, rdx            ; clear before div
+    div rcx                 ; rax = rax/rcx, rdx=rax%rcx
+    test rdx, rdx           ; is there any remainder?
+    jz .no_remainder
+    xor rdx, rdx
+    mul rcx                 ; rax is the closest multiple below the input
+    add rax, rcx            ; rax is rounded upwards
+    jmp .exit
+.no_remainder:
+    mov rax, rbx
+    jmp .exit
+
+.exit:
+    ret
+
 %endif
