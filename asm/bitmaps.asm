@@ -9,14 +9,13 @@ PIXEL_PER_DIGIT equ 8
 
 section .data
     digit_0 db 0b00111100,
-            db 0b01100110,
-            db 0b01100110,
-            db 0b01100110,
-            db 0b01100110,
-            db 0b01100110,
-            db 0b00111100,
-            db 0b00000000,
-
+			db 0b01100110,
+			db 0b01100110,
+			db 0b01100110,
+			db 0b01100110,
+			db 0b01100110,
+			db 0b00111100,
+			db 0b00000000,
 
 
 	digit_1 db 0b00001000,
@@ -186,14 +185,20 @@ GDrawBitmap:
     ; draw rectangle for each pixel
 
     mov r11, 0 ; y index
+    mov r10, 0 ; counter for cells passed
 
 .draw_loop:
     mov r15, 0  ; bits drawn(0-r8)
     mov r14, 0  ; bit counter(in current byte, 0-8)
     mov r13, 0   ; byte counter(0-rax)
-    mov r12b, [rsi] ; current byte, need to offset by r13
+.load_byte:
+    mov rdx, rsi    ; current bitmap row address
+    add rdx, r13    ; offset by bytes passed in the current row
+    mov r12b, [rdx] ; current byte- bitmap address offset
 
 .draw_byte_loop:
+
+    inc r10
     shl r12b, 1
     jnc .after_draw_bit
 
@@ -210,11 +215,15 @@ GDrawBitmap:
     ; byte finished
     mov r14, 0
     inc r13
-    jmp .draw_loop
+    jmp .load_byte
 .after_draw_row:
+    add rsi, rax ; offset the bitmap address by the bytes we passed
     inc r11
     cmp r11, r9 ; check if we finished bitmap
     jl .draw_loop
+
+    push r10
+    call exit
 
     ret
 
