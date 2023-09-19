@@ -155,8 +155,7 @@ GDrawDigit:
 ; -----------
 ; Draws a bitmap
 ;----------------------------------------------------------------------
-; Assumes-	width is 8, bitmap is stored in bytes
-; Assumes-	each byte is one row, each column is one bit
+; Assumes-	each row is split to bytes, each bit representing a pixel
 ;----------------------------------------------------------------------
 ; Receives- bitmapAddress, bitmapX, bitmapY, pxH, pxW, pixelSize(STACK)
 ;----------------------------------------------------------------------
