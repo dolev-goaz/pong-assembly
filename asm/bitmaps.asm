@@ -232,43 +232,6 @@ GDrawBitmap:
 
     ret
 
-; .draw_loop: ; loops over every row
-
-;     mov r14, 0 ; bit counter (X)
-;     mov r13, [rsi] ; current byte
-; .inner_loop:
-;     shr r13, 1
-;     jnc .after_draw ; skip current pixel if no need to draw
-; .draw_rectangle:
-;     ; Rectangle(x + pixel_size * bit_counter, x + pixel_size * byte_counter, pixel_size, pixel_size)
-;     MY_PUSHA
-
-;     mov r10, 8 - 1 ; indexes start at 0, byte is 8 bits
-;     sub r10, r14 ; x indexes are inverted
-;     ; mov r10, r14
-
-;     push rcx    ; start x
-;     push rbx    ; start y
-;     push r10    ; index x
-;     push r15    ; index y
-;     push rdi    ; size
-;     call GBitmapDrawPixel
-;     CLEAR_STACK_PARAMS 5
-
-;     MY_POPA
-
-; .after_draw:
-;     inc r14     ; next x index
-;     cmp r14, r8  ; finished passing through the row?
-;     jl .inner_loop
-
-;     add rsi, rax ; go to next row
-;     inc r15      ; next y index
-;     cmp r15, r9  ; finished the bitmap
-;     jl .draw_loop
-    
-;     ret
-
 ;-------------------------------------------------------------
 ; Bitmap Draw Pixel
 ; -----------------
