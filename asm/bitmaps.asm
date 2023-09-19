@@ -185,7 +185,6 @@ GDrawBitmap:
     ; draw rectangle for each pixel
 
     mov r11, 0 ; y index
-    mov r10, 0 ; counter for cells passed
 
 .draw_loop:
     mov r15, 0  ; bits drawn(0-r8)
@@ -198,10 +197,20 @@ GDrawBitmap:
 
 .draw_byte_loop:
 
-    inc r10
     shl r12b, 1
     jnc .after_draw_bit
 
+    MY_PUSHA
+
+    push rcx    ; start x
+    push rbx    ; start y
+    push r15    ; index x
+    push r11    ; index y
+    push rdi    ; size
+    call GBitmapDrawPixel
+    CLEAR_STACK_PARAMS 5
+
+    MY_POPA
     ; draw here
 
 .after_draw_bit:
@@ -221,9 +230,6 @@ GDrawBitmap:
     inc r11
     cmp r11, r9 ; check if we finished bitmap
     jl .draw_loop
-
-    push r10
-    call exit
 
     ret
 
