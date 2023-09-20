@@ -402,7 +402,8 @@ DrawScreen:
 
 DrawFrameCount:
 	SetColor COLOR_RED
-	DrawNumber [Frame_Count], 10, 10, 20
+	; for some reason causes seg fault
+	; DrawNumber [Frame_Count], 10, 10, 20
 	ret
 
 DrawScore:
