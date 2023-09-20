@@ -3,7 +3,8 @@
 %include "asm/graphics_utils.inc"
 %include "asm/bitmaps.asm"
 %include "asm/XK_keycodes.inc"
-; --- constants
+
+%define DEBUG_MODE
 
 extern	clock, usleep
 
@@ -27,9 +28,8 @@ SCORE_BITMAP_SIZE		equ 80
 SCORE_CENTER_OFFSET		equ 50
 SCORE_TOP_OFFSET		equ 20
 
-FRAME_RATE				equ 60
+FRAME_RATE				equ 50
 FRAME_TIME_MS			equ 1000 / FRAME_RATE
-FRAME_TIME_NS			equ 1000 * FRAME_TIME_MS
 
 ; ==== Player 1(left player) Parameters
 
@@ -68,8 +68,10 @@ Player_2_Score	dq 0
 
 Ball_X			dq BALL_START_X
 Ball_Y			dq BALL_START_Y
-Ball_X_Speed	dq 3
-Ball_Y_Speed	dq 2
+Ball_X_Speed	dq 2
+Ball_Y_Speed	dq 1
+
+Frame_Count 	dq 0
 
 window_title db "Pong", 0
 
@@ -135,6 +137,9 @@ game_logic:
 	call UpdateGameLogic
 	
 draw:
+	%ifdef DEBUG_MODE
+	inc qword [Frame_Count]
+	%endif
 	call DrawScreen
 
 time_sync:
@@ -148,7 +153,8 @@ time_sync:
 	; sleep if elapsed is less than frame_time
 	; rax	= FRAME_TIME - ELAPSED = FRAME_TIME - (frame_end - frame_start)
 	;		= FRAME_TIME + frame_start - frame_end
-	mov rax, FRAME_TIME_NS
+after_time:
+	mov rax, FRAME_TIME_MS
 	add rax, [frame_start]
 	sub rax, [frame_end]
 	cmp rax, 0
@@ -327,10 +333,15 @@ CheckBallWithinPlayerY:
 ; -----
 ; Sleeps for a given amount of time
 ; -----------------------------------------------------------
-; Receives-	the amount of time to sleep in NANOseconds(STACK)
+; Receives-	the amount of time to sleep in MILIseconds(STACK)
 ;------------------------------------------------------------
 Sleep:
-	GET_STACK_PARAM rdi, 1
+	GET_STACK_PARAM rax, 1
+	mov rcx, 1000	; miliseconds to nanoseconds
+	xor rdx, rdx
+	mul rcx
+
+	mov rdi, rax
     call usleep
 	ret
 
@@ -340,13 +351,11 @@ Sleep:
 ; Returns the current time
 ; ------------------------------------------------------
 ; Receives-	the address to store the current time(STACK)
-; Returns- 	the current time(DATA)
+; Returns- 	the current time in ms(DATA)
 ;-------------------------------------------------------
 GetCurrentTime:
 	GET_STACK_PARAM rbx, 1
 	call clock
-	mov rcx, CLOCKS_PER_MS
-	div rcx ; rax is now in ms
 	mov [rbx], rax
     ret
 
@@ -385,7 +394,15 @@ DrawScreen:
 	DrawPlayer PLAYER_1_X, [Player_1_Y], PLAYER_WIDTH, PLAYER_HEIGHT
 	DrawPlayer PLAYER_2_X, [Player_2_Y], PLAYER_WIDTH, PLAYER_HEIGHT
 	DrawBall [Ball_X], [Ball_Y], BALL_DIAMETER
+	%ifdef DEBUG_MODE
+	call DrawFrameCount
+	%endif
 
+	ret
+
+DrawFrameCount:
+	SetColor COLOR_RED
+	DrawNumber [Frame_Count], 10, 10, 20
 	ret
 
 DrawScore:
